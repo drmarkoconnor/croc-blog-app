@@ -1,0 +1,15 @@
+{
+	"title": "Charlotte App",
+	"colors": {
+		"bg": "#0f0a1f",
+		"panel": "#1a1035",
+		"primary": "#7b5cff",
+		"accent": "#c6b4ff",
+		"text": "#f7f4ff"
+	},
+	"links": [
+		{ "name": "ACM Canvas", "url": "https://canvas.acm.edu" },
+		{ "name": "Spotify", "url": "https://spotify.com" }
+	]
+}
+

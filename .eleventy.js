@@ -1,6 +1,7 @@
 module.exports = function (eleventyConfig) {
-	// Basic passthrough copy example, update as per spec
-	eleventyConfig.addPassthroughCopy('static')
+	// Passthrough static assets and hero images
+	eleventyConfig.addPassthroughCopy('src/assets')
+	eleventyConfig.addPassthroughCopy('src/_includes')
 	return {
 		dir: {
 			input: 'src',
