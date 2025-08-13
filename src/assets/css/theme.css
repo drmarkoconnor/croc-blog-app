@@ -25,16 +25,18 @@ body {
 	font-size: clamp(16px, 1.2vw + 12px, 18px);
 }
 h1 {
-	font-size: clamp(2rem, 4vw, 3rem);
+	font-size: clamp(2.5rem, 6vw, 4rem);
 	margin: 0.5rem 0 0.75rem;
+	text-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
 }
 h2 {
 	font-size: clamp(1.5rem, 2.8vw, 2rem);
 	margin: 1.5rem 0 0.75rem;
 }
 p.lead {
-	font-size: clamp(1.1rem, 1.6vw, 1.25rem);
-	color: var(--muted);
+	font-size: clamp(1.2rem, 2vw, 1.5rem);
+	color: #ffffffde;
+	text-shadow: 0 3px 16px rgba(0, 0, 0, 0.4);
 }
 
 .container {
@@ -83,11 +85,17 @@ main {
 	content: '';
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(
-		180deg,
-		rgba(15, 10, 31, 0.35),
-		rgba(20, 16, 42, 0.85)
-	);
+	background: radial-gradient(
+			1200px 600px at 50% 30%,
+			rgba(0, 0, 0, 0.45),
+			transparent 60%
+		),
+		linear-gradient(
+			180deg,
+			rgba(12, 8, 28, 0.65),
+			rgba(12, 8, 28, 0.9) 60%,
+			rgba(20, 16, 42, 0.95)
+		);
 }
 .hero .content {
 	position: relative;
@@ -96,6 +104,18 @@ main {
 }
 .hero h1 {
 	letter-spacing: -0.02em;
+}
+
+/* High-contrast bubble behind hero text */
+.hero .bubble {
+	display: inline-block;
+	background: color-mix(in srgb, var(--panel) 85%, transparent);
+	background: rgba(26, 20, 53, 0.85);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 18px;
+	padding: 1.2rem 1.4rem;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+	backdrop-filter: blur(6px) saturate(120%);
 }
 
 .hub {

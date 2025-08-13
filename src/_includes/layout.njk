@@ -6,6 +6,11 @@
   <link rel="stylesheet" href="/assets/css/theme.css">
 </head>
 <body>
+  <header class="site-header">
+    <div class="container">
+      {% include "nav.njk" %}
+    </div>
+  </header>
   <main>
     {{ content | safe }}
   </main>
