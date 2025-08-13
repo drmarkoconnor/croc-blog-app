@@ -4,7 +4,9 @@ module.exports = function (eleventyConfig) {
 	eleventyConfig.addPassthroughCopy('src/_includes')
 	return {
 		dir: {
-			input: 'src',
+			input: 'src/pages',
+			includes: '../_includes',
+			data: '../_data',
 			output: '_site',
 		},
 	}
