@@ -5,3 +5,23 @@ layout: layout.njk
 <h2>Record or Upload Song Snippet</h2>
 <p>Record your idea or upload a voice memo. Transcription will appear here.</p>
 {% include "nav.njk" %}
+<div>
+	<button id="btnStart">Start</button>
+	<button id="btnStop">Stop</button>
+	<audio id="preview" controls style="display:block;margin-top:1rem;"></audio>
+</div>
+<script type="module">
+	import { startRec, stopRec } from '/assets/js/recorder.js'
+	let lastBlob
+	document.getElementById('btnStart').onclick = startRec
+	document.getElementById('btnStop').onclick = async () => {
+		stopRec()
+		// wait a tick for onstop to fire
+		setTimeout(() => {
+			if (window.lastRecordedBlob) {
+				const url = URL.createObjectURL(window.lastRecordedBlob)
+				document.getElementById('preview').src = url
+			}
+		}, 300)
+	}
+</script>

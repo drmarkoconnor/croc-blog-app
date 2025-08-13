@@ -1,0 +1,13 @@
+[build]
+  command = "eleventy"
+  publish = "_site"
+
+[[redirects]]
+  from = "/api/transcribe"
+  to = "/.netlify/functions/transcribe"
+  status = 200
+
+[[redirects]]
+  from = "/api/ics"
+  to = "/.netlify/functions/ics"
+  status = 200
