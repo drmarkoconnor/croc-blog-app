@@ -1,4 +1,4 @@
-fetch('/src/_data/quotes.json')
+fetch('/quotes.json')
 	.then((r) => r.json())
 	.then((quotes) => {
 		const q = quotes[Math.floor(Math.random() * quotes.length)]
