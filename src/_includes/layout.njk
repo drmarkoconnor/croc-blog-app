@@ -23,5 +23,30 @@
   <main>
     {{ content | safe }}
   </main>
+  <script>
+    (function(){
+      // Highlight Saved Snips only if there are saved items
+      async function highlightSaved(){
+        try {
+          const el = document.getElementById('nav-saved-snips');
+          if (!el) return;
+          const r = await fetch('/api/ideas');
+          if (!r.ok) return;
+          const data = await r.json();
+          const hasSaved = Array.isArray(data) && data.some(row => row.is_saved === true);
+          if (hasSaved) {
+            el.style.background = '#1f3b0a';
+            el.style.borderRadius = '999px';
+            el.style.boxShadow = '0 6px 18px rgba(31,59,10,0.45)';
+          } else {
+            el.style.background = '';
+            el.style.boxShadow = '';
+          }
+        } catch (_) {}
+      }
+      if (document.readyState === 'complete') highlightSaved();
+      else window.addEventListener('DOMContentLoaded', highlightSaved);
+    })();
+  </script>
 </body>
 </html>
