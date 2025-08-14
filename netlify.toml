@@ -16,3 +16,8 @@
   from = "/api/links"
   to = "/.netlify/functions/links"
   status = 200
+
+[[redirects]]
+  from = "/api/ideas"
+  to = "/.netlify/functions/ideas"
+  status = 200

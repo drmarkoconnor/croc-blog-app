@@ -4,6 +4,7 @@ layout: layout.njk
 ---
 <h2>Song Ideas</h2>
 <p>Your recorded/uploaded snippets with transcript and generated songwriting suggestions.</p>
+<p><button class="btn" id="btnRefresh" type="button">Refresh</button></p>
 
 <section class="card" style="overflow:auto;">
 	<table class="ideas-table" style="width:100%; border-collapse: collapse;">
@@ -60,11 +61,9 @@ layout: layout.njk
 </template>
 
 <script type="module">
-	import { initSupabase } from '/assets/js/supabase.js'
-	const supabase = await initSupabase()
-
 	const ideasBody = document.getElementById('ideasBody')
 	const tmpl = document.getElementById('ideaRowTmpl')
+		const btnRefresh = document.getElementById('btnRefresh')
 
 	function audioUrl(storage_path) {
 		const base = window.ENV?.SUPABASE_URL || ''
@@ -76,27 +75,15 @@ layout: layout.njk
 		return (Array.isArray(list) ? list : []).map(v => `<li>${v}</li>`).join('')
 	}
 
-	async function loadIdeas() {
-		// Join snippets -> transcripts -> analyses (latest per snippet)
-		// For now, list recent snippets and pick their first transcript+analysis
-		const { data: rows, error } = await supabase
-			.from('song_snippets')
-			.select(`
-				id, title, storage_path, created_at,
-				transcripts:transcripts(
-					id, text, created_at,
-					analysis:transcript_analyses!inner(
-						id, summary, todos, rhymes, genres, chord_progressions, inspirations
-					)
-				)
-			`)
-			.order('created_at', { ascending: false })
-			.limit(100)
-		if (error) {
-			ideasBody.innerHTML = `<tr><td colspan="3">Error: ${error.message}</td></tr>`
-			return
-		}
-		if (!rows || rows.length === 0) {
+		async function loadIdeas() {
+			ideasBody.innerHTML = `<tr><td colspan="3">Loading…</td></tr>`
+			const res = await fetch('/api/ideas')
+			if (!res.ok) {
+				ideasBody.innerHTML = `<tr><td colspan="3">Error: ${await res.text()}</td></tr>`
+				return
+			}
+			const rows = await res.json()
+			if (!rows || rows.length === 0) {
 			ideasBody.innerHTML = `<tr><td colspan="3">No ideas yet. Use the Recorder to add one.</td></tr>`
 			return
 		}
@@ -104,7 +91,7 @@ layout: layout.njk
 		ideasBody.innerHTML = ''
 		for (const s of rows) {
 			const tr = s.transcripts?.[0]
-			const an = tr?.analysis?.[0] || tr?.analysis // supabase-js may unwrap
+			const an = tr?.transcript_analyses?.[0] || tr?.transcript_analyses
 			const frag = document.importNode(tmpl.content, true)
 			const tds = frag.querySelectorAll('td')
 			tds[0].textContent = s.title || 'Untitled snippet'
@@ -142,5 +129,6 @@ layout: layout.njk
 	}
 
 	loadIdeas()
+		btnRefresh.onclick = loadIdeas
 </script>
 
