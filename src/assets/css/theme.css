@@ -263,3 +263,62 @@ main {
 	padding: 2rem 0;
 }
 
+/* Links grid */
+.links-grid {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	margin-top: 1rem;
+}
+.link-card {
+	position: relative;
+	border-radius: var(--radius);
+	overflow: hidden;
+	background: linear-gradient(180deg, var(--panel), var(--panel-2));
+	border: 1px solid rgba(255,255,255,0.14);
+	box-shadow: var(--shadow);
+}
+.link-card .cover {
+	display: block;
+	width: 100%;
+	height: min(24vh, 220px);
+	background-size: cover;
+	background-position: center;
+	filter: saturate(100%) contrast(105%);
+}
+.link-card .meta {
+	display: grid;
+	grid-template-columns: 40px 1fr auto;
+	align-items: center;
+	gap: 0.8rem;
+	padding: 0.9rem 0.9rem 1rem;
+}
+.link-card .fav {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	background: #fff1;
+}
+.link-card .title {
+	color: var(--text);
+	font-weight: 800;
+	text-decoration: none;
+	font-size: clamp(1.05rem, 2vw, 1.25rem);
+}
+.link-card .host {
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+.link-card .delete {
+	background: #ffffff14;
+	color: #fff;
+	border: none;
+	width: 34px;
+	height: 34px;
+	border-radius: 10px;
+	cursor: pointer;
+}
+.link-card .delete:hover {
+	background: #6b8e23;
+}
+

@@ -11,3 +11,8 @@
   from = "/api/ics"
   to = "/.netlify/functions/ics"
   status = 200
+
+[[redirects]]
+  from = "/api/links"
+  to = "/.netlify/functions/links"
+  status = 200
