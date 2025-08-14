@@ -3,6 +3,7 @@ title: Hello, Charlotte
 layout: layout.njk
 heroVideo: "/assets/img/hero/splash.mov"
 ---
+<div class="welcome-banner" aria-live="polite">Hello, Charlotte</div>
 <header class="hero">
   {% if heroVideo %}
     <video class="hero-video" src="{{ heroVideo }}" poster="/assets/img/hero/placeholder.svg" autoplay muted loop playsinline></video>
@@ -15,52 +16,54 @@ heroVideo: "/assets/img/hero/splash.mov"
       </div>
     </div>
   </div>
-</header>
 
-<div class="container">
-  <section class="hub section">
-    <article class="card">
-      <h3>Song Snippets</h3>
-      <p>Record or upload ideas, auto‑transcribe with Whisper.</p>
-      <a class="btn" href="/recorder/">Open Recorder</a>
-    </article>
-    <article class="card">
-      <h3>Lyric Book</h3>
-      <p>Search, filter and edit your lyrics with audio playback.</p>
-      <a class="btn" href="/lyrics/">Open Lyric Book</a>
-    </article>
-    <article class="card">
-      <h3>Notes & To‑Dos</h3>
-      <p>Voice notes with automatic to‑do extraction.</p>
-      <a class="btn" href="/notes/">Open Notes</a>
-    </article>
-    <article class="card">
-      <h3>Ideas</h3>
-      <p>Capture quick song ideas and tags.</p>
-      <a class="btn" href="/ideas/">Open Ideas</a>
-    </article>
-    <article class="card">
-      <h3>Calendar</h3>
-      <p>Private timetable with week and month views.</p>
-      <a class="btn" href="/calendar/">Open Calendar</a>
-    </article>
-    <article class="card">
-      <h3>Productivity</h3>
-      <p>Pomodoro timer and Today overview.</p>
-      <a class="btn" href="/productivity/">Open Productivity</a>
-    </article>
-    <article class="card">
-      <h3>Links</h3>
-      <p>Shortcuts to useful resources.</p>
-      <a class="btn" href="/links/">Open Links</a>
-    </article>
-    <article class="card">
-      <h3>Help</h3>
-      <p>Tips and FAQs on using the app.</p>
-      <a class="btn" href="/help/">Open Help</a>
-    </article>
-  </section>
-</div>
+  <div class="hub-overlay">
+    <div class="container">
+      <section class="hub">
+        <article class="card">
+          <h3>Song Snippets</h3>
+          <p>Record or upload ideas, auto‑transcribe with Whisper.</p>
+          <a class="btn" href="/recorder/">Open Recorder</a>
+        </article>
+        <article class="card">
+          <h3>Lyric Book</h3>
+          <p>Search, filter and edit your lyrics with audio playback.</p>
+          <a class="btn" href="/lyrics/">Open Lyric Book</a>
+        </article>
+        <article class="card">
+          <h3>Notes & To‑Dos</h3>
+          <p>Voice notes with automatic to‑do extraction.</p>
+          <a class="btn" href="/notes/">Open Notes</a>
+        </article>
+        <article class="card">
+          <h3>Ideas</h3>
+          <p>Capture quick song ideas and tags.</p>
+          <a class="btn" href="/ideas/">Open Ideas</a>
+        </article>
+        <article class="card">
+          <h3>Calendar</h3>
+          <p>Private timetable with week and month views.</p>
+          <a class="btn" href="/calendar/">Open Calendar</a>
+        </article>
+        <article class="card">
+          <h3>Productivity</h3>
+          <p>Pomodoro timer and Today overview.</p>
+          <a class="btn" href="/productivity/">Open Productivity</a>
+        </article>
+        <article class="card">
+          <h3>Links</h3>
+          <p>Shortcuts to useful resources.</p>
+          <a class="btn" href="/links/">Open Links</a>
+        </article>
+        <article class="card">
+          <h3>Help</h3>
+          <p>Tips and FAQs on using the app.</p>
+          <a class="btn" href="/help/">Open Help</a>
+        </article>
+      </section>
+    </div>
+  </div>
+</header>
 
 <script src="/assets/js/quotes.js"></script>
 <script>

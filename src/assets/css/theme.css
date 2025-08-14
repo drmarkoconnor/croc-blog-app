@@ -66,6 +66,36 @@ main {
 	padding: 2rem 0 3rem;
 }
 
+/* Top welcome banner that fades out to reveal nav */
+.welcome-banner {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 50;
+	text-align: center;
+	padding: 0.6rem 1rem;
+	font-weight: 800;
+	letter-spacing: 0.02em;
+	background: linear-gradient(90deg, var(--primary), var(--accent));
+	color: white;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+	animation: bannerFade 11s ease-out forwards;
+}
+@keyframes bannerFade {
+	0% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	90% {
+		opacity: 0.05;
+	}
+	100% {
+		opacity: 0;
+		transform: translateY(-30px);
+	}
+}
+
 .hero {
 	position: relative;
 	min-height: 80vh;
@@ -140,7 +170,17 @@ main {
 	display: grid;
 	gap: 1.2rem;
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-	margin-top: -3rem;
+	margin-top: 0;
+}
+.hub-overlay {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 5vh;
+}
+.hub-overlay .card {
+	backdrop-filter: blur(4px);
+	background: rgba(26, 20, 53, 0.8);
 }
 .card {
 	background: linear-gradient(180deg, var(--panel), var(--panel-2));
@@ -151,10 +191,11 @@ main {
 }
 .card h3 {
 	margin-top: 0;
-	font-size: 1.25rem;
+	font-size: clamp(1.25rem, 2.2vw, 1.6rem);
 }
 .card p {
-	color: var(--muted);
+	color: #fff;
+	font-size: clamp(1rem, 1.6vw, 1.125rem);
 	margin-bottom: 1rem;
 }
 .btn {
