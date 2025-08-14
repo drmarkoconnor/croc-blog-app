@@ -2,8 +2,6 @@
 title: Hello, Charlotte
 layout: layout.njk
 heroVideo: "/assets/img/hero/splash.mov"
----
-<div class="welcome-banner" aria-live="polite">Hello, Charlotte</div>
 <header class="hero">
   {% if heroVideo %}
     <video class="hero-video" src="{{ heroVideo }}" poster="/assets/img/hero/placeholder.svg" autoplay muted loop playsinline></video>
@@ -12,7 +10,6 @@ heroVideo: "/assets/img/hero/splash.mov"
   <div class="hero-title-bar">
     <div class="container">
       <strong class="title">Hello, Charlotte</strong>
-      <span class="sep">•</span>
       <span class="lead" id="quote">&nbsp;</span>
     </div>
   </div>

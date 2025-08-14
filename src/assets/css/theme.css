@@ -75,17 +75,24 @@ main {
 	z-index: 40;
 	padding: 0.5rem 0;
 	background: rgba(26, 20, 53, 0.85);
-	border-top: 1px solid rgba(255, 255, 255, 0.06);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 	backdrop-filter: blur(6px) saturate(120%);
+}
+.hero-title-bar .container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.75rem;
+	text-align: center;
 }
 .hero-title-bar .title {
 	font-size: clamp(1.125rem, 2.2vw, 1.5rem);
 	font-weight: 800;
 }
-.hero-title-bar .sep {
-	opacity: 0.5;
-	padding: 0 0.6rem;
+.hero-title-bar .container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.75rem;
 }
 .hero-title-bar .lead {
 	font-size: clamp(1rem, 1.8vw, 1.2rem);

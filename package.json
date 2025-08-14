@@ -6,7 +6,10 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"build": "eleventy",
 		"dev": "eleventy --serve",
-		"start": "netlify dev"
+		"start": "netlify dev",
+		"video:all": "node scripts/encode-video.mjs --input src/assets/img/hero/splash.mov --outdir src/assets/img/hero --name splash --height 1080 --fps 24 --poster",
+		"video:mp4": "node scripts/encode-video.mjs --format mp4 --input src/assets/img/hero/splash.mov --outdir src/assets/img/hero --name splash --height 1080 --fps 24",
+		"video:webm": "node scripts/encode-video.mjs --format webm --input src/assets/img/hero/splash.mov --outdir src/assets/img/hero --name splash --height 1080 --fps 24"
 	},
 	"keywords": [],
 	"author": "",
