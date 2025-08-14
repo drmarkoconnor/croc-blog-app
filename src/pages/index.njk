@@ -1,11 +1,10 @@
----
 title: Hello, Charlotte
 layout: layout.njk
-hero: "src/assets/img/hero/placeholder.jpg"
+heroVideo: "/assets/img/hero/splash.mov"
 ---
 <header class="hero">
-  {% if hero %}
-    {% image hero, 'Charlotte hero image', '(min-width: 768px) 100vw, 100vw', [1200, 1600, 2200] %}
+  {% if heroVideo %}
+    <video class="hero-video" src="{{ heroVideo }}" poster="/assets/img/hero/placeholder.svg" autoplay muted loop playsinline></video>
   {% endif %}
   <div class="content">
     <div class="container">
@@ -63,3 +62,13 @@ hero: "src/assets/img/hero/placeholder.jpg"
 </div>
 
 <script src="/assets/js/quotes.js"></script>
+<script>
+  (function(){
+    const v = document.querySelector('.hero-video');
+    if (!v) return;
+    try { v.muted = true; } catch {}
+    v.playbackRate = 0.6;
+    const play = () => v.play && v.play().catch(()=>{});
+    if (v.readyState >= 2) play(); else v.addEventListener('canplay', play, { once: true });
+  })();
+</script>
