@@ -2,12 +2,151 @@
 title: Help
 layout: layout.njk
 ---
-<h2>How to use this app</h2>
-<ul>
-  <li>Record song ideas and notes easily.</li>
-  <li>Search and edit your Lyric Book.</li>
-  <li>Manage your calendar and tasks.</li>
-  <li>Enjoy motivational quotes and a calming theme.</li>
-  <li>Your content is private and secure.</li>
-</ul>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Chewy&display=swap');
+  .help-fun { position: relative; }
+  .help-fun h1, .help-fun h2, .help-fun h3 { font-family: 'Chewy', ui-rounded, system-ui, -apple-system, sans-serif; letter-spacing:.02em; }
+  .help-intro {
+    background: radial-gradient(1200px 600px at 20% -20%, rgba(123,92,255,.18), transparent 60%),
+                radial-gradient(1000px 500px at 120% 20%, rgba(198,180,255,.18), transparent 60%);
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 18px; padding: 1rem 1.2rem; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+  .help-grid { display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); }
+  .help-card { position:relative; background: linear-gradient(180deg, rgba(26,20,53,.75), rgba(20,16,42,.9)); border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:1rem; box-shadow: 0 12px 34px rgba(0,0,0,.25); transition: transform .18s ease, box-shadow .18s ease; overflow:hidden; }
+  .help-card h3 { margin:.2rem 0 .4rem; }
+  .help-card p { margin:.3rem 0 .6rem; color: var(--muted); }
+  .tag { display:inline-block; background:#ffffff18; color:#fff; padding:.25rem .5rem; border-radius:999px; font-weight:800; font-size:.9rem }
+  .step { margin:.25rem 0; }
+  .emoji { filter: saturate(120%) contrast(105%); }
+  .tip { background: #ffffff12; padding:.6rem .8rem; border-radius:12px; border:1px dashed #ffffff30; color:#fff; }
+  .help-card:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 16px 44px rgba(0,0,0,.35); }
+  .card-icon { position:absolute; top:10px; right:10px; width:38px; height:38px; opacity:.9; filter: drop-shadow(0 4px 10px rgba(0,0,0,.35)); }
+  .tint-record { background: linear-gradient(180deg, rgba(123,92,255,.18), rgba(20,16,42,.9)); box-shadow: 0 12px 30px rgba(123,92,255,.25); }
+  .tint-snips { background: linear-gradient(180deg, rgba(198,180,255,.18), rgba(20,16,42,.9)); box-shadow: 0 12px 30px rgba(198,180,255,.22); }
+  .tint-lyric { background: linear-gradient(180deg, rgba(68,192,138,.18), rgba(20,16,42,.9)); box-shadow: 0 12px 30px rgba(68,192,138,.22); }
+  .tint-pomo { background: linear-gradient(180deg, rgba(246,180,77,.18), rgba(20,16,42,.9)); box-shadow: 0 12px 30px rgba(246,180,77,.22); }
+  .tint-links { background: linear-gradient(180deg, rgba(111,178,255,.18), rgba(20,16,42,.9)); box-shadow: 0 12px 30px rgba(111,178,255,.22); }
+  .tint-cal { background: linear-gradient(180deg, rgba(255,107,107,.18), rgba(20,16,42,.9)); box-shadow: 0 12px 30px rgba(255,107,107,.22); }
+  /* Floating koala */
+  .koala-wrap { position: fixed; top: 16vh; left: -260px; width: 220px; pointer-events:none; z-index: 60; }
+  .koala { width: 220px; height: auto; opacity:.9; animation: koalaFloat 48s linear infinite; }
+  @keyframes koalaFloat {
+    0% { transform: translateX(-10vw) translateY(0px); }
+    50% { transform: translateX(55vw) translateY(-8px); }
+    100% { transform: translateX(110vw) translateY(0px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .koala { animation: none; }
+  }
+</style>
+
+<div class="help-fun">
+  <!-- Floating Koala with a love note -->
+  <div class="koala-wrap" aria-hidden="true">
+    <svg class="koala" viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gfur" x1="0" x2="1">
+          <stop offset="0" stop-color="#cfd6e4"/>
+          <stop offset="1" stop-color="#b9c2d3"/>
+        </linearGradient>
+      </defs>
+      <!-- head -->
+      <circle cx="120" cy="90" r="60" fill="url(#gfur)" stroke="#8aa" stroke-opacity=".5"/>
+      <!-- ears -->
+      <circle cx="70" cy="55" r="26" fill="#cbd3e3" stroke="#8aa" stroke-opacity=".4"/>
+      <circle cx="170" cy="55" r="26" fill="#cbd3e3" stroke="#8aa" stroke-opacity=".4"/>
+      <!-- eyes -->
+      <circle cx="100" cy="85" r="6" fill="#111"/>
+      <circle cx="140" cy="85" r="6" fill="#111"/>
+      <!-- nose -->
+      <ellipse cx="120" cy="100" rx="10" ry="14" fill="#333"/>
+      <!-- sign -->
+      <g transform="translate(170,80)">
+        <rect x="0" y="0" rx="10" ry="10" width="120" height="70" fill="#fff" opacity=".96" stroke="#333"/>
+        <text x="60" y="28" text-anchor="middle" font-family="'Chewy', sans-serif" font-size="15" fill="#222">your dad</text>
+        <text x="60" y="48" text-anchor="middle" font-family="'Chewy', sans-serif" font-size="15" fill="#222">loves you x</text>
+      </g>
+    </svg>
+  </div>
+
+  <section class="help-intro card">
+    <h2>Welcome to your creative cockpit ✨</h2>
+    <p class="lead">Everything you need to write, try chords, hear ideas, record a quick voice note, and save it all—fast.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem">
+      <span class="tag">RecordNow! 🧠🎙️</span>
+      <span class="tag">Saved Snips 📼</span>
+      <span class="tag">Lyric Book (Songcraft) 🎼</span>
+      <span class="tag">Pomodoro-Noise! ⏱️</span>
+      <span class="tag">Links 🔗</span>
+      <span class="tag">Calendar 📅</span>
+    </div>
+  </section>
+
+  <div class="help-grid" style="margin-top:1rem">
+    <article class="help-card tint-record">
+      <h3>RecordNow! <span class="emoji">🎙️</span></h3>
+      <svg class="card-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="10" y="22" width="44" height="28" rx="6" fill="#c6b4ff"/><circle cx="24" cy="36" r="6" fill="#7b5cff"/><rect x="38" y="30" width="10" height="12" rx="2" fill="#7b5cff"/></svg>
+      <p>Capture an idea with one tap. We’ll transcribe and summarize, then you can save or discard.</p>
+      <ol>
+        <li class="step">Tap Start → hum, sing, or speak.</li>
+        <li class="step">Stop to transcribe and auto‑analyze.</li>
+        <li class="step">Save it to show in <em>Saved Snips</em>.</li>
+      </ol>
+      <p class="tip">Tip: On iOS, playback requires a click—use the Play button inside details.</p>
+    </article>
+    <article class="help-card tint-snips">
+      <h3>Saved Snips <span class="emoji">📼</span></h3>
+      <svg class="card-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="8" y="18" width="48" height="28" rx="6" fill="#c6b4ff"/><rect x="16" y="24" width="32" height="10" rx="2" fill="#7b5cff"/><rect x="20" y="38" width="8" height="4" fill="#7b5cff"/><rect x="36" y="38" width="8" height="4" fill="#7b5cff"/></svg>
+      <p>A tight table for all captured ideas—expand to read transcripts, todos, rhymes, genres, and chords.</p>
+      <ul>
+        <li>Click Play to fetch a signed URL and listen.</li>
+        <li>Delete removes audio + transcript + analysis.</li>
+      </ul>
+    </article>
+    <article class="help-card tint-lyric">
+      <h3>Lyric Book (Songcraft) <span class="emoji">🎼</span></h3>
+      <svg class="card-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M14 10h36v44H14z" fill="#c6ffef" opacity=".9"/><path d="M20 20h24v4H20zm0 10h24v4H20zm0 10h16v4H20z" fill="#1f3b0a"/></svg>
+      <p>Two‑pane writer: ChordPro lyric editor on the left, chord palette on the right.</p>
+      <ul>
+        <li>Write with inline chords like: When I [C]find myself in [G]times of trouble.</li>
+        <li>Click chords in the palette to audition and insert at the cursor.</li>
+        <li>Transpose with –/+ semitones; key‑aware flats/sharps.</li>
+        <li>Autosaves to your account; drafts keep offline.</li>
+        <li>Record mini‑ideas and attach to the song.</li>
+      </ul>
+    </article>
+    <article class="help-card tint-pomo">
+      <h3>Pomodoro‑Noise! <span class="emoji">⏱️</span></h3>
+      <svg class="card-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="32" cy="34" r="18" fill="#ffd49a"/><rect x="28" y="12" width="8" height="8" rx="2" fill="#f6b44d"/></svg>
+      <p>Set 15/30/45/60‑minute focus sprints, celebrate with fireworks, and hear a kind word when you finish.</p>
+      <ul>
+        <li>Timer sits above the focus videos.</li>
+        <li>Toggle brown noise, ambient focus, and body‑double videos.</li>
+      </ul>
+    </article>
+    <article class="help-card tint-links">
+      <h3>Links <span class="emoji">🔗</span></h3>
+      <svg class="card-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M26 38l-4 4a8 8 0 01-11-11l6-6" stroke="#6fb2ff" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M38 26l4-4a8 8 0 1111 11l-6 6" stroke="#6fb2ff" stroke-width="6" fill="none" stroke-linecap="round"/></svg>
+      <p>High‑res, tidy link cards for your favorite resources; add, remove, and reorder quickly.</p>
+    </article>
+    <article class="help-card tint-cal">
+      <h3>Calendar <span class="emoji">📅</span></h3>
+      <svg class="card-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="10" y="16" width="44" height="34" rx="6" fill="#ffb3b3"/><rect x="10" y="24" width="44" height="6" fill="#ff6b6b"/><rect x="16" y="34" width="10" height="8" fill="#fff"/></svg>
+      <p>Personal schedule with an ICS feed—subscribe from your calendar app with an optional shared secret.</p>
+    </article>
+  </div>
+
+  <section class="card" style="margin-top:1rem">
+    <h3>How‑to quickstart</h3>
+    <ol>
+      <li>Open <strong>RecordNow!</strong> and record a 10‑second idea. Save it.</li>
+      <li>Open <strong>Saved Snips</strong>, expand the row, and review the suggestions.</li>
+      <li>Go to <strong>Lyric Book</strong>, set your key, and paste your first verse. Use the palette to try chords.</li>
+      <li>Hit <strong>Pomodoro‑Noise!</strong> and choose a 30‑minute sprint. One small thing at a time.</li>
+    </ol>
+    <p class="tip">All content is private—RLS ensures only you can read/write your data.</p>
+  </section>
+</div>
 
