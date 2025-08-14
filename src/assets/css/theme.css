@@ -66,6 +66,33 @@ main {
 	padding: 2rem 0 3rem;
 }
 
+/* Fixed horizontal title bar just below the site header */
+.hero-title-bar {
+	position: fixed;
+	top: 56px; /* approx nav height */
+	left: 0;
+	right: 0;
+	z-index: 40;
+	padding: 0.5rem 0;
+	background: rgba(26, 20, 53, 0.85);
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	backdrop-filter: blur(6px) saturate(120%);
+}
+.hero-title-bar .title {
+	font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+	font-weight: 800;
+}
+.hero-title-bar .sep {
+	opacity: 0.5;
+	padding: 0 0.6rem;
+}
+.hero-title-bar .lead {
+	font-size: clamp(1rem, 1.8vw, 1.2rem);
+	color: #fff;
+	opacity: 0.9;
+}
+
 /* Top welcome banner that fades out to reveal nav */
 .welcome-banner {
 	position: fixed;

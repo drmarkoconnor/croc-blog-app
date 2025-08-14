@@ -8,12 +8,17 @@ heroVideo: "/assets/img/hero/splash.mov"
   {% if heroVideo %}
     <video class="hero-video" src="{{ heroVideo }}" poster="/assets/img/hero/placeholder.svg" autoplay muted loop playsinline></video>
   {% endif %}
+  <!-- Long horizontal title bar under nav (does not affect layout flow) -->
+  <div class="hero-title-bar">
+    <div class="container">
+      <strong class="title">Hello, Charlotte</strong>
+      <span class="sep">•</span>
+      <span class="lead" id="quote">&nbsp;</span>
+    </div>
+  </div>
   <div class="content">
     <div class="container">
-      <div class="bubble">
-        <h1>Hello, Charlotte</h1>
-        <p class="lead" id="quote">&nbsp;</p>
-      </div>
+      <!-- original centered bubble removed per request -->
     </div>
   </div>
 
