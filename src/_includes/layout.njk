@@ -4,13 +4,21 @@
   <meta charset="UTF-8">
   <title>{{ title }}</title>
   <link rel="stylesheet" href="/assets/css/theme.css">
+  <script>
+    window.ENV = Object.assign({}, window.ENV, {
+      SUPABASE_URL: "{{ env.SUPABASE_URL }}",
+      SUPABASE_ANON_KEY: "{{ env.SUPABASE_ANON_KEY }}"
+    });
+  </script>
 </head>
-<body>
+<body class="{% if showNav is defined and not showNav %}no-nav{% endif %}">
+  {% if showNav is not defined or showNav %}
   <header class="site-header">
     <div class="container">
       {% include "nav.njk" %}
     </div>
   </header>
+  {% endif %}
   <main>
     {{ content | safe }}
   </main>

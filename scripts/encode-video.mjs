@@ -6,6 +6,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
+import os from 'node:os'
 
 const exec = promisify(execFile)
 
@@ -120,7 +121,7 @@ async function encodeWebm({ input, outdir, name, height, fps, crfWebm }) {
 		'-row-mt',
 		'1',
 		'-threads',
-		String(Math.max(1, require('os').cpus().length - 1)),
+		String(Math.max(1, os.cpus().length - 1)),
 		'-an',
 		out,
 	])

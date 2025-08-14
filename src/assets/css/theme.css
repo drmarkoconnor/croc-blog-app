@@ -77,6 +77,9 @@ main {
 	background: rgba(26, 20, 53, 0.85);
 	backdrop-filter: blur(6px) saturate(120%);
 }
+.no-nav .hero-title-bar {
+	top: 8px;
+}
 .hero-title-bar .container {
 	display: flex;
 	justify-content: center;
@@ -236,14 +239,16 @@ main {
 	display: inline-block;
 	background: var(--primary);
 	color: white;
-	padding: 0.7rem 1rem;
+	padding: 0.85rem 1.2rem;
 	border-radius: 12px;
 	text-decoration: none;
-	font-weight: 700;
+	font-weight: 800;
+	font-size: clamp(1.05rem, 2.2vw, 1.25rem);
 	box-shadow: 0 6px 18px rgba(123, 92, 255, 0.35);
 }
 .btn:hover {
-	filter: brightness(1.1);
+	background: #6b8e23; /* olive green */
+	box-shadow: 0 8px 22px rgba(107, 142, 35, 0.45);
 }
 
 .section {

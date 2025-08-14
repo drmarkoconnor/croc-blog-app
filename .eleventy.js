@@ -1,4 +1,6 @@
 const Image = require('@11ty/eleventy-img')
+// Load environment variables from .env at build time
+require('dotenv').config()
 
 async function imageShortcode(
 	src,
