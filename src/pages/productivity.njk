@@ -2,10 +2,14 @@
 title: Productivity
 layout: layout.njk
 ---
+
 <h2>Pomodoro & Today Overview</h2>
 <p>Timer and daily events/tasks summary.</p>
-<div class="grid" style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start;">
-	<section class="card">
+
+<section class="card" style="margin-bottom:1rem;border:1px solid rgba(255,255,255,0.18)">
+	<h3 style="margin-top:0;">Focus Space</h3>
+	<div class="grid" style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start;">
+		<section class="card">
 		<h3>Grab your body double for study</h3>
 		<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;">
 			<iframe
@@ -18,9 +22,9 @@ layout: layout.njk
 				style="position:absolute;top:0;left:0;width:100%;height:100%;"
 			></iframe>
 		</div>
-	</section>
+		</section>
 
-	<section class="card">
+		<section class="card">
 		<h3>Brown Noise</h3>
 		<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;">
 			<iframe
@@ -33,7 +37,7 @@ layout: layout.njk
 				style="position:absolute;top:0;left:0;width:100%;height:100%;"
 			></iframe>
 		</div>
-	</section>
+		</section>
 
 		<section class="card">
 			<h3>Outer Space Charlienaut</h3>
@@ -50,7 +54,7 @@ layout: layout.njk
 			</div>
 		</section>
 
-	<section class="card">
+		<section class="card">
 		<h3>Ambient Focus</h3>
 		<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;">
 			<iframe
@@ -63,6 +67,112 @@ layout: layout.njk
 				style="position:absolute;top:0;left:0;width:100%;height:100%;"
 			></iframe>
 		</div>
-	</section>
-</div>
+		</section>
+	</div>
+</section>
+
+<section class="card" id="pomodoro" style="position:relative;overflow:hidden">
+	<h3 style="margin-top:0;">Pomodoro Timer</h3>
+	<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+		<div id="timeDisplay" style="font-size:clamp(2rem,6vw,3rem);font-weight:800;letter-spacing:0.06em;min-width:9ch;text-align:center">00:00</div>
+		<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+			<button class="btn" data-min="15" type="button">15</button>
+			<button class="btn" data-min="30" type="button">30</button>
+			<button class="btn" data-min="45" type="button">45</button>
+			<button class="btn" data-min="60" type="button">60</button>
+			<button class="btn" id="btnReset" type="button" style="background:#444;">Reset</button>
+		</div>
+	</div>
+	<canvas id="fw" width="800" height="300" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .3s ease"></canvas>
+</section>
+
+<script>
+// Simple Pomodoro with fireworks + spoken encouragement
+(function(){
+	const el = document.getElementById('pomodoro');
+	const display = document.getElementById('timeDisplay');
+	const btns = el.querySelectorAll('button[data-min]');
+	const reset = document.getElementById('btnReset');
+	const cvs = document.getElementById('fw');
+	const ctx = cvs.getContext('2d');
+	let endAt = 0, raf, tickTimer, particles = [], lastT = 0;
+
+	function setSize(){
+		const r = el.getBoundingClientRect();
+		cvs.width = r.width; cvs.height = Math.max(240, r.height);
+	}
+	setSize();
+	addEventListener('resize', setSize);
+
+	function fmt(ms){
+		const s = Math.max(0, Math.floor(ms/1000));
+		const m = Math.floor(s/60).toString().padStart(2,'0');
+		const ss = (s%60).toString().padStart(2,'0');
+		return `${m}:${ss}`;
+	}
+
+	function start(min){
+		endAt = Date.now() + min*60*1000;
+		clearInterval(tickTimer);
+		tickTimer = setInterval(tick, 250);
+		tick();
+	}
+	function stop(){
+		clearInterval(tickTimer); endAt = 0; display.textContent = '00:00';
+		cvs.style.opacity = 0; cancelAnimationFrame(raf); particles=[];
+	}
+	function done(){
+		clearInterval(tickTimer); display.textContent = '00:00';
+		celebrate(); speak();
+	}
+	function tick(){
+		if(!endAt) return;
+		const left = endAt - Date.now();
+		if(left <= 0){ done(); return; }
+		display.textContent = fmt(left);
+	}
+
+	// Fireworks (very light confetti)
+	function celebrate(){
+		particles=[]; cvs.style.opacity = 1; lastT = performance.now();
+		for(let i=0;i<160;i++){
+			const ang = Math.random()*Math.PI*2;
+			const sp = 60 + Math.random()*140;
+			particles.push({
+				x: cvs.width/2, y: cvs.height*0.7,
+				vx: Math.cos(ang)*sp, vy: Math.sin(ang)*sp*(-0.5),
+				life: 1200+Math.random()*800,
+				size: 2+Math.random()*3,
+				color: `hsl(${Math.floor(Math.random()*360)},90%,65%)`
+			});
+		}
+		raf = requestAnimationFrame(loop);
+		setTimeout(()=>{ cvs.style.opacity = 0; }, 2200);
+	}
+	function loop(t){
+		const dt = Math.min(50, t - lastT); lastT = t;
+		ctx.clearRect(0,0,cvs.width,cvs.height);
+		for(const p of particles){
+			p.life -= dt; if(p.life<=0) continue;
+			p.vy += 0.25; // gravity
+			p.x += p.vx * dt/1000; p.y += p.vy * dt/1000;
+			ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life/1400);
+			ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+		}
+		particles = particles.filter(p=>p.life>0 && p.y<cvs.height+10);
+		if(particles.length>0) raf = requestAnimationFrame(loop);
+	}
+
+	function speak(){
+		try{
+			const u = new SpeechSynthesisUtterance('you are great just do one small thing - love you dad');
+			u.rate = 1; u.pitch = 1; u.lang = 'en-US';
+			speechSynthesis.speak(u);
+		}catch{}
+	}
+
+	btns.forEach(b=>b.addEventListener('click', ()=> start(parseInt(b.dataset.min,10)) ));
+	reset.addEventListener('click', stop);
+})();
+</script>
 

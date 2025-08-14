@@ -27,6 +27,21 @@ async function sb(path, opts = {}) {
 	return res
 }
 
+async function signStorageUrl(storage_path, expiresIn = 3600) {
+	// POST /storage/v1/object/sign/{bucket}/{path} { expiresIn }
+	const endpoint = `/storage/v1/object/sign/snippets/${encodeURI(storage_path)}`
+	const res = await sb(endpoint, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ expiresIn }),
+	})
+	const data = await res.json()
+	const signed = data?.signedURL || data?.signedUrl || data?.url
+	if (!signed) throw new Error('Failed to sign URL')
+	const base = SUPABASE_URL.replace(/\/$/, '') + '/storage/v1'
+	return base + signed
+}
+
 exports.handler = async (event) => {
 	try {
 		if (event.httpMethod === 'GET') {
@@ -49,8 +64,35 @@ exports.handler = async (event) => {
 				})
 				return json(200, { ok: true })
 			}
+			if (action === 'sign') {
+				// Fetch snippet to get storage_path, then sign
+				const r = await sb(
+					`/rest/v1/song_snippets?id=eq.${encodeURIComponent(
+						id
+					)}&select=storage_path&limit=1`
+				)
+				const rows = await r.json()
+				const storage_path = rows?.[0]?.storage_path
+				if (!storage_path) return json(404, { error: 'Not found' })
+				const url = await signStorageUrl(storage_path, 3600)
+				return json(200, { url })
+			}
 			if (action === 'discard') {
-				// delete cascade will remove transcript & analysis
+				// attempt to delete storage object first (best-effort), then delete row (cascade removes transcript & analysis)
+				try {
+					const r = await sb(
+						`/rest/v1/song_snippets?id=eq.${encodeURIComponent(
+							id
+						)}&select=storage_path&limit=1`
+					)
+					const rows = await r.json()
+					const storage_path = rows?.[0]?.storage_path
+					if (storage_path) {
+						await sb(`/storage/v1/object/snippets/${encodeURI(storage_path)}`, {
+							method: 'DELETE',
+						})
+					}
+				} catch (_) {}
 				await sb(`/rest/v1/song_snippets?id=eq.${encodeURIComponent(id)}`, {
 					method: 'DELETE',
 				})

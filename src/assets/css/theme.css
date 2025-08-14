@@ -259,6 +259,12 @@ main {
 	box-shadow: 0 10px 24px rgba(31, 59, 10, 0.55);
 }
 
+.btn-small {
+	font-size: 0.9rem;
+	padding: 0.5rem 0.75rem;
+	border-radius: 10px;
+}
+
 .section {
 	padding: 2rem 0;
 }

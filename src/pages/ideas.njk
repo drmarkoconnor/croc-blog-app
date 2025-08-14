@@ -12,7 +12,7 @@ layout: layout.njk
 			<tr>
 				<th style="text-align:left; padding:.5rem;">Title</th>
 				<th style="text-align:left; padding:.5rem;">Summary</th>
-				<th style="text-align:left; padding:.5rem;">Actions</th>
+			<th style="text-align:left; padding:.5rem;">Actions</th>
 			</tr>
 		</thead>
 		<tbody id="ideasBody"></tbody>
@@ -26,6 +26,7 @@ layout: layout.njk
 		<td style="padding:.5rem; white-space:nowrap;">
 			<button class="btn btn-small" data-action="toggle">Details</button>
 			<button class="btn btn-small" data-action="play">Play</button>
+			<button class="btn btn-small" data-action="delete">Delete</button>
 		</td>
 	</tr>
 	<tr class="details" style="display:none;">
@@ -65,11 +66,12 @@ layout: layout.njk
 	const tmpl = document.getElementById('ideaRowTmpl')
 		const btnRefresh = document.getElementById('btnRefresh')
 
-	function audioUrl(storage_path) {
-		const base = window.ENV?.SUPABASE_URL || ''
-		if (!base || !storage_path) return ''
-		return `${base.replace(/\/$/, '')}/storage/v1/object/public/snippets/${encodeURI(storage_path)}`
-	}
+		async function signedAudioUrl(id) {
+			const r = await fetch('/api/ideas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'sign' }) })
+			if (!r.ok) throw new Error(await r.text())
+			const data = await r.json()
+			return data.url
+		}
 
 	function toLi(list) {
 		return (Array.isArray(list) ? list : []).map(v => `<li>${v}</li>`).join('')
@@ -110,19 +112,35 @@ layout: layout.njk
 			frag.querySelector('[data-action="toggle"]').onclick = () => {
 				detailsRow.style.display = detailsRow.style.display === 'none' ? '' : 'none'
 			}
-			frag.querySelector('[data-action="play"]').onclick = (e) => {
-				const existing = detailsRow.querySelector('audio')
-				if (!existing) {
-					const a = document.createElement('audio')
-					a.controls = true
-					a.preload = 'none'
-					a.src = audioUrl(s.storage_path)
-					detailsRow.querySelector('.card').prepend(a)
-				} else {
-					existing.play()
-				}
-				if (detailsRow.style.display === 'none') detailsRow.style.display = ''
-			}
+					frag.querySelector('[data-action="play"]').onclick = async (e) => {
+						const existing = detailsRow.querySelector('audio')
+						try {
+							const url = await signedAudioUrl(s.id)
+							if (!existing) {
+								const a = document.createElement('audio')
+								a.controls = true
+								a.preload = 'none'
+								a.src = url
+								detailsRow.querySelector('.card').prepend(a)
+								await a.play().catch(() => {})
+							} else {
+								existing.src = url
+								await existing.play().catch(() => {})
+							}
+							if (detailsRow.style.display === 'none') detailsRow.style.display = ''
+						} catch (err) {
+							alert('Could not play audio: ' + (err?.message || err))
+						}
+					}
+					frag.querySelector('[data-action="delete"]').onclick = async () => {
+						if (!confirm('Delete this idea (audio, transcript, analysis)?')) return
+						const r = await fetch('/api/ideas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: s.id, action: 'discard' }) })
+						if (!r.ok) { alert('Delete failed'); return }
+						// Remove both rows (main + details)
+						const trMain = ideasBody.querySelector('tr:nth-child(n)')
+						// Simpler: reload list
+						loadIdeas()
+					}
 
 			ideasBody.appendChild(frag)
 		}
