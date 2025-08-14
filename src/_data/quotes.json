@@ -1,13 +1,482 @@
 [
 	{
-		"text": "When you put your mind to it, you can do anything.",
-		"author": "Michelle Carter",
-		"tags": ["motivation"]
+		"text": "Embrace the whirlwind.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "creativity"]
 	},
 	{
-		"text": "Different wiring, different superpowers.",
-		"author": "—",
-		"tags": ["adhd", "self‑acceptance"]
+		"text": "Chaotic brilliance.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "self-belief"]
+	},
+	{
+		"text": "Different, not less.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "motivation"]
+	},
+	{
+		"text": "Creative chaos reigns.",
+		"author": "Your Dad x",
+		"tags": ["creativity"]
+	},
+	{
+		"text": "Perfectly imperfect.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "motivation"]
+	},
+	{
+		"text": "Progress, not perfection.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "I am creative.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "creativity"]
+	},
+	{
+		"text": "I am resilient.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "persistence"]
+	},
+	{ "text": "I am unique.", "author": "Your Dad x", "tags": ["self-belief"] },
+	{
+		"text": "I am worthy.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "motivation"]
+	},
+	{ "text": "I am enough.", "author": "Your Dad x", "tags": ["self-belief"] },
+	{ "text": "I will succeed.", "author": "Your Dad x", "tags": ["motivation"] },
+	{
+		"text": "Organized chaos.",
+		"author": "Your Dad x",
+		"tags": ["creativity"]
+	},
+	{
+		"text": "Hyperfocus activated.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "creativity"]
+	},
+	{
+		"text": "Ideas overflowing.",
+		"author": "Your Dad x",
+		"tags": ["creativity"]
+	},
+	{
+		"text": "Embrace the detours.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "Fuel your passions.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "creativity"]
+	},
+	{
+		"text": "Find your focus.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "self-belief"]
+	},
+	{
+		"text": "Embrace your quirks.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "creativity"]
+	},
+	{
+		"text": "Beautifully chaotic mind.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "self-belief"]
+	},
+	{
+		"text": "Dream big, start small.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "One step at a time.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "Celebrate your wins.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "self-belief"]
+	},
+	{
+		"text": "You are not alone.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "motivation"]
+	},
+	{
+		"text": "Rewrite the narrative.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "motivation"]
+	},
+	{
+		"text": "Lost in thought.",
+		"author": "Your Dad x",
+		"tags": ["creativity"]
+	},
+	{
+		"text": "Distracted, but determined.",
+		"author": "Your Dad x",
+		"tags": ["persistence", "motivation"]
+	},
+	{
+		"text": "Focus found, then lost.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "persistence"]
+	},
+	{ "text": "I am capable.", "author": "Your Dad x", "tags": ["self-belief"] },
+	{
+		"text": "Find your tribe.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "self-belief"]
+	},
+	{
+		"text": "Embrace your differences.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "creativity"]
+	},
+	{
+		"text": "Never give up.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "Strength in differences.",
+		"author": "Your Dad x",
+		"tags": ["self-belief"]
+	},
+	{
+		"text": "Don’t practice until you get it right. Practice until you can’t get it wrong.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "persistence"]
+	},
+	{
+		"text": "Music can change the world because it can change people.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "motivation"]
+	},
+	{
+		"text": "If it sounds right, then it is.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "creativity"]
+	},
+	{
+		"text": "Great songs aren’t written, they’re rewritten.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "persistence"]
+	},
+	{
+		"text": "Start where you stand, and work with whatever tools you have.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "songwriting"]
+	},
+	{
+		"text": "It takes time to discover what the song is.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "patience"]
+	},
+	{
+		"text": "Be patient; everyone works at a different pace.",
+		"author": "Your Dad x",
+		"tags": ["persistence", "motivation"]
+	},
+	{
+		"text": "Don’t just wait for inspiration; work a little every day.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "persistence"]
+	},
+	{
+		"text": "My songs speak for themselves.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Start with something simple and true.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "creativity"]
+	},
+	{
+		"text": "Songwriting is telling short stories in minutes.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "creativity"]
+	},
+	{
+		"text": "Each song has its own life—sometimes fast, sometimes slow.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "patience"]
+	},
+	{
+		"text": "There are no rules; it depends on what you’re doing.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "songwriting"]
+	},
+	{
+		"text": "Go mow the lawn; music comes naturally in its own time.",
+		"author": "Your Dad x",
+		"tags": ["patience", "songwriting"]
+	},
+	{
+		"text": "Your creativity is your own unique rhythm.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "self-belief"]
+	},
+	{
+		"text": "Start with truth, not perfection.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Embrace your authentic voice.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Let your mistakes guide you.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "songwriting"]
+	},
+	{
+		"text": "Be you.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "motivation"]
+	},
+	{
+		"text": "Always be ready for inspiration to hit.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "songwriting"]
+	},
+	{
+		"text": "Trust your gut.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "creativity"]
+	},
+	{
+		"text": "Leave your mark.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "creativity"]
+	},
+	{
+		"text": "Don’t let perfection hold you back.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "creativity"]
+	},
+	{
+		"text": "Mistakes can lead to new directions.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "persistence"]
+	},
+	{
+		"text": "Make it yours.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Write honestly; it’s healing.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Words are a tool of manifestation.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "motivation"]
+	},
+	{
+		"text": "A clear plan creates a clear mind.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "self-belief"]
+	},
+	{
+		"text": "There is more than one right way to do things.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "self-belief"]
+	},
+	{
+		"text": "I can do things at my own pace.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "patience"]
+	},
+	{
+		"text": "I accept my differences as opportunities to grow.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "motivation"]
+	},
+	{
+		"text": "I breathe in peace and breathe out worries.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "calm"]
+	},
+	{
+		"text": "I choose to respond, not react.",
+		"author": "Your Dad x",
+		"tags": ["self-control", "motivation"]
+	},
+	{
+		"text": "My mind works in creative and unique ways.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "self-belief"]
+	},
+	{
+		"text": "My hard work will pay off.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "I’m not there yet—but I’m moving forward.",
+		"author": "Your Dad x",
+		"tags": ["persistence", "motivation"]
+	},
+	{
+		"text": "Just focus on the next step.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "Creativity loves courage.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "self-belief"]
+	},
+	{
+		"text": "Your voice matters.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Sing like no one’s listening.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Keep showing up.",
+		"author": "Your Dad x",
+		"tags": ["persistence", "motivation"]
+	},
+	{
+		"text": "Every song is a new beginning.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "motivation"]
+	},
+	{
+		"text": "Small steps create big change.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "Your art will find its audience.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "songwriting"]
+	},
+	{
+		"text": "Stay curious.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "motivation"]
+	},
+	{
+		"text": "Turn feelings into songs.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Your story is worth telling.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Every note is a step forward.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "motivation"]
+	},
+	{
+		"text": "Believe in your next verse.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Keep writing, even when it’s hard.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "persistence"]
+	},
+	{
+		"text": "Your melody will find its words.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Make music for yourself first.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Every chord holds a possibility.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "creativity"]
+	},
+	{
+		"text": "Write the song you need to hear.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Be brave enough to be bad at first.",
+		"author": "Your Dad x",
+		"tags": ["self-belief", "persistence"]
+	},
+	{
+		"text": "Turn pain into poetry.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "creativity"]
+	},
+	{
+		"text": "Silence is part of the music.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "patience"]
+	},
+	{
+		"text": "Your time will come.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "self-belief"]
+	},
+	{
+		"text": "Chase the song in your head.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "creativity"]
+	},
+	{
+		"text": "Don’t rush the process.",
+		"author": "Your Dad x",
+		"tags": ["patience", "songwriting"]
+	},
+	{
+		"text": "Some days you just need to hum.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "motivation"]
+	},
+	{
+		"text": "Your rhythm is yours alone.",
+		"author": "Your Dad x",
+		"tags": ["creativity", "self-belief"]
+	},
+	{
+		"text": "Keep the pen moving.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "persistence"]
+	},
+	{
+		"text": "Write without judgment.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
+	},
+	{
+		"text": "Every artist starts somewhere.",
+		"author": "Your Dad x",
+		"tags": ["motivation", "persistence"]
+	},
+	{
+		"text": "The world needs your song.",
+		"author": "Your Dad x",
+		"tags": ["songwriting", "self-belief"]
 	}
 ]
 
