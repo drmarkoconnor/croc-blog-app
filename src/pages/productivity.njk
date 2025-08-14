@@ -3,8 +3,26 @@ title: Productivity
 layout: layout.njk
 ---
 
-<h2>Pomodoro Body-Double Noise</h2>
-<p>Timer and your noisy freinds</p>
+<div class="intro-grid">
+	<div>
+		<h2>Pomodoro Body-Double Noise</h2>
+		<p>Timer and your noisy friends</p>
+	</div>
+	<section class="card" id="pomodoro" style="position:relative;overflow:hidden">
+		<h3 style="margin-top:0;">Pomodoro Timer</h3>
+		<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+			<div id="timeDisplay" style="font-size:clamp(2rem,6vw,3rem);font-weight:800;letter-spacing:0.06em;min-width:9ch;text-align:center">00:00</div>
+			<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+				<button class="btn" data-min="15" type="button">15</button>
+				<button class="btn" data-min="30" type="button">30</button>
+				<button class="btn" data-min="45" type="button">45</button>
+				<button class="btn" data-min="60" type="button">60</button>
+				<button class="btn" id="btnReset" type="button" style="background:#444;">Reset</button>
+			</div>
+		</div>
+		<canvas id="fw" width="800" height="300" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .3s ease"></canvas>
+	</section>
+</div>
 
 <section class="card" style="margin-bottom:1rem;border:1px solid rgba(255,255,255,0.18)">
 	<h3 style="margin-top:0;">Focus Space</h3>
@@ -69,21 +87,6 @@ layout: layout.njk
 		</div>
 		</section>
 	</div>
-</section>
-
-<section class="card" id="pomodoro" style="position:relative;overflow:hidden">
-	<h3 style="margin-top:0;">Pomodoro Timer</h3>
-	<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-		<div id="timeDisplay" style="font-size:clamp(2rem,6vw,3rem);font-weight:800;letter-spacing:0.06em;min-width:9ch;text-align:center">00:00</div>
-		<div style="display:flex;gap:.5rem;flex-wrap:wrap">
-			<button class="btn" data-min="15" type="button">15</button>
-			<button class="btn" data-min="30" type="button">30</button>
-			<button class="btn" data-min="45" type="button">45</button>
-			<button class="btn" data-min="60" type="button">60</button>
-			<button class="btn" id="btnReset" type="button" style="background:#444;">Reset</button>
-		</div>
-	</div>
-	<canvas id="fw" width="800" height="300" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .3s ease"></canvas>
 </section>
 
 <script>

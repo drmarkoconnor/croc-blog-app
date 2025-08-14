@@ -269,6 +269,19 @@ main {
 	padding: 2rem 0;
 }
 
+/* Productivity page header layout */
+.intro-grid {
+	display: grid;
+	grid-template-columns: 1fr minmax(260px, 420px);
+	gap: 1rem;
+	align-items: start;
+}
+@media (max-width: 700px) {
+	.intro-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
 /* Links grid */
 .links-grid {
 	display: grid;
