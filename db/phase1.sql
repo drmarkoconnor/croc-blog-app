@@ -35,28 +35,42 @@ alter table public.song_snippets enable row level security;
 alter table public.transcripts enable row level security;
 
 -- Policies: owners can CRUD their rows
-create policy if not exists "song_snippets_owner_select" on public.song_snippets
+drop policy if exists "song_snippets_owner_select" on public.song_snippets;
+create policy "song_snippets_owner_select" on public.song_snippets
   for select using (auth.uid() = user_id);
-create policy if not exists "song_snippets_owner_insert" on public.song_snippets
+
+drop policy if exists "song_snippets_owner_insert" on public.song_snippets;
+create policy "song_snippets_owner_insert" on public.song_snippets
   for insert with check (auth.uid() = user_id);
-create policy if not exists "song_snippets_owner_update" on public.song_snippets
+
+drop policy if exists "song_snippets_owner_update" on public.song_snippets;
+create policy "song_snippets_owner_update" on public.song_snippets
   for update using (auth.uid() = user_id);
-create policy if not exists "song_snippets_owner_delete" on public.song_snippets
+
+drop policy if exists "song_snippets_owner_delete" on public.song_snippets;
+create policy "song_snippets_owner_delete" on public.song_snippets
   for delete using (auth.uid() = user_id);
 
-create policy if not exists "transcripts_owner_select" on public.transcripts
+drop policy if exists "transcripts_owner_select" on public.transcripts;
+create policy "transcripts_owner_select" on public.transcripts
   for select using (exists (
     select 1 from public.song_snippets s where s.id = transcripts.snippet_id and s.user_id = auth.uid()
   ));
-create policy if not exists "transcripts_owner_insert" on public.transcripts
+
+drop policy if exists "transcripts_owner_insert" on public.transcripts;
+create policy "transcripts_owner_insert" on public.transcripts
   for insert with check (exists (
     select 1 from public.song_snippets s where s.id = snippet_id and s.user_id = auth.uid()
   ));
-create policy if not exists "transcripts_owner_update" on public.transcripts
+
+drop policy if exists "transcripts_owner_update" on public.transcripts;
+create policy "transcripts_owner_update" on public.transcripts
   for update using (exists (
     select 1 from public.song_snippets s where s.id = snippet_id and s.user_id = auth.uid()
   ));
-create policy if not exists "transcripts_owner_delete" on public.transcripts
+
+drop policy if exists "transcripts_owner_delete" on public.transcripts;
+create policy "transcripts_owner_delete" on public.transcripts
   for delete using (exists (
     select 1 from public.song_snippets s where s.id = snippet_id and s.user_id = auth.uid()
   ));
@@ -67,7 +81,10 @@ create index if not exists transcripts_snippet_id_idx on public.transcripts (sni
 -- Storage RLS policies for 'snippets' bucket
 -- Folder convention: {user_id}/<filename>
 -- Select: owner can read their own files
-create policy if not exists "snippets_select_own" on storage.objects
+alter table storage.objects enable row level security;
+
+drop policy if exists "snippets_select_own" on storage.objects;
+create policy "snippets_select_own" on storage.objects
   for select using (
     bucket_id = 'snippets' and (
       auth.role() = 'service_role' or name like (auth.uid()::text || '/%')
@@ -75,17 +92,20 @@ create policy if not exists "snippets_select_own" on storage.objects
   );
 
 -- Insert: only into own folder
-create policy if not exists "snippets_insert_own" on storage.objects
+drop policy if exists "snippets_insert_own" on storage.objects;
+create policy "snippets_insert_own" on storage.objects
   for insert with check (
     bucket_id = 'snippets' and name like (auth.uid()::text || '/%')
   );
 
 -- Update/Delete: only own files
-create policy if not exists "snippets_update_own" on storage.objects
+drop policy if exists "snippets_update_own" on storage.objects;
+create policy "snippets_update_own" on storage.objects
   for update using (
     bucket_id = 'snippets' and name like (auth.uid()::text || '/%')
   );
-create policy if not exists "snippets_delete_own" on storage.objects
+drop policy if exists "snippets_delete_own" on storage.objects;
+create policy "snippets_delete_own" on storage.objects
   for delete using (
     bucket_id = 'snippets' and name like (auth.uid()::text || '/%')
   );
