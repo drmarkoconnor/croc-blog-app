@@ -255,8 +255,8 @@ main {
 	z-index: 2; /* ensure above any accidental overlays */
 }
 .btn:hover {
-	background: #6b8e23; /* olive green */
-	box-shadow: 0 8px 22px rgba(107, 142, 35, 0.45);
+	background: #1f3b0a; /* deeper, darker green */
+	box-shadow: 0 10px 24px rgba(31, 59, 10, 0.55);
 }
 
 .section {
@@ -358,7 +358,7 @@ main {
 	cursor: pointer;
 }
 .link-card .delete:hover {
-	background: #6b8e23;
+	background: #1f3b0a;
 }
 
 /* Recorder layout helpers */
@@ -373,19 +373,35 @@ main {
 
 /* Mobile-first fluid type bumps for small iPhones only */
 @media (max-width: 430px) {
+	body {
+		font-size: clamp(17px, 4.5vw, 19px);
+	}
 	.btn {
-		font-size: clamp(1.15rem, 5.8vw, 1.45rem);
-		padding: 1rem 1.25rem;
+		font-size: clamp(1.25rem, 6.2vw, 1.6rem);
+		padding: 1.05rem 1.35rem;
 		border-radius: 14px;
 	}
 	.card h3 {
-		font-size: clamp(1.35rem, 6.2vw, 1.6rem);
+		font-size: clamp(1.45rem, 6.8vw, 1.8rem);
 	}
 	.card p {
-		font-size: clamp(1.05rem, 4.6vw, 1.25rem);
+		font-size: clamp(1.1rem, 5vw, 1.3rem);
 	}
 	.link-card .title {
-		font-size: clamp(1.15rem, 5.2vw, 1.4rem);
+		font-size: clamp(1.25rem, 5.8vw, 1.5rem);
+	}
+	.link-card .host {
+		font-size: 1rem;
+	}
+	.link-card .fav {
+		width: 36px;
+		height: 36px;
+	}
+	.hero-title-bar .title {
+		font-size: clamp(1.2rem, 4.8vw, 1.5rem);
+	}
+	.hero-title-bar .lead {
+		font-size: clamp(1.05rem, 4.4vw, 1.25rem);
 	}
 	.link-card .delete {
 		width: 38px;
