@@ -3,24 +3,111 @@ title: Song Snippets Recorder
 layout: layout.njk
 ---
 <h2>Record or Upload Song Snippet</h2>
-<p>Record your idea or upload a voice memo. Transcription will appear here.</p>
-<div>
-	<button id="btnStart">Start</button>
-	<button id="btnStop">Stop</button>
-	<audio id="preview" controls style="display:block;margin-top:1rem;"></audio>
+<p>Record your idea or upload a voice memo. We’ll transcribe it and generate a concise summary with TODOs and songwriting suggestions.</p>
+
+<div class="form-wrap">
+	<div class="card" style="display:grid;gap:0.75rem;">
+		<label for="snippetTitle">Title (optional)</label>
+		<input id="snippetTitle" type="text" placeholder="e.g., Chorus idea in D minor" />
+		<div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+			<button class="btn" id="btnStart" type="button">Start Recording</button>
+			<button class="btn" id="btnStop" type="button">Stop</button>
+			<input id="fileInput" type="file" accept="audio/*" />
+			<button class="btn" id="btnUpload" type="button">Transcribe & Summarize</button>
+		</div>
+		<audio id="preview" controls style="display:block;margin-top:0.5rem;"></audio>
+		<div id="status" style="color: var(--muted);"></div>
+	</div>
 </div>
+
+<div class="grid-2" style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));">
+	<section class="card">
+		<h3>Transcript</h3>
+		<pre id="transcript" style="white-space:pre-wrap"></pre>
+	</section>
+	<section class="card">
+		<h3>Summary & TODOs</h3>
+		<div id="summary"></div>
+	</section>
+</div>
+
 <script type="module">
-	import { startRec, stopRec } from '/assets/js/recorder.js'
-	let lastBlob
-	document.getElementById('btnStart').onclick = startRec
-	document.getElementById('btnStop').onclick = async () => {
+	import { startRec, stopRec, uploadAndTranscribe } from '/assets/js/recorder.js'
+
+	const btnStart = document.getElementById('btnStart')
+	const btnStop = document.getElementById('btnStop')
+	const fileInput = document.getElementById('fileInput')
+	const btnUpload = document.getElementById('btnUpload')
+	const preview = document.getElementById('preview')
+	const statusEl = document.getElementById('status')
+	const titleEl = document.getElementById('snippetTitle')
+	const transcriptEl = document.getElementById('transcript')
+	const summaryEl = document.getElementById('summary')
+
+	let blob
+
+	btnStart.onclick = () => {
+		summaryEl.innerHTML = ''
+		transcriptEl.textContent = ''
+		statusEl.textContent = 'Recording…'
+		startRec()
+	}
+
+	btnStop.onclick = () => {
+		statusEl.textContent = 'Stopping…'
 		stopRec()
-		// wait a tick for onstop to fire
-		setTimeout(() => {
-			if (window.lastRecordedBlob) {
-				const url = URL.createObjectURL(window.lastRecordedBlob)
-				document.getElementById('preview').src = url
-			}
-		}, 300)
+	}
+
+	document.addEventListener('recorder:stopped', (e) => {
+		blob = e.detail.blob
+		if (blob) {
+			preview.src = URL.createObjectURL(blob)
+			statusEl.textContent = 'Ready to transcribe.'
+		}
+	})
+
+	fileInput.onchange = () => {
+		if (fileInput.files && fileInput.files[0]) {
+			blob = fileInput.files[0]
+			preview.src = URL.createObjectURL(blob)
+			statusEl.textContent = 'Ready to transcribe.'
+		}
+	}
+
+	btnUpload.onclick = async () => {
+		if (!blob) {
+			alert('Record or choose a file first.')
+			return
+		}
+		try {
+			statusEl.textContent = 'Uploading and transcribing…'
+			const res = await uploadAndTranscribe(blob, titleEl.value)
+			statusEl.textContent = 'Done.'
+			transcriptEl.textContent = res.transcript?.text || ''
+
+			const a = res.analysis || {}
+			const todos = (a.todos || []).map(t => `<li>${t}</li>`).join('')
+			const rhymes = (a.songwriting_suggestions?.rhymes || []).map(t => `<li>${t}</li>`).join('')
+			const genres = (a.songwriting_suggestions?.genres || []).map(t => `<li>${t}</li>`).join('')
+			const chords = (a.songwriting_suggestions?.chord_progressions || []).map(t => `<li><code>${t}</code></li>`).join('')
+			const insp = (a.songwriting_suggestions?.inspirations || []).map(i => `<li><a href="${i.url}" target="_blank" rel="noopener">${i.title || i.url}</a></li>`).join('')
+
+			summaryEl.innerHTML = `
+				<p>${a.summary || ''}</p>
+				<h4>TODOs</h4>
+				<ul>${todos}</ul>
+				<h4>Songwriting Suggestions</h4>
+				<div class="grid" style="display:grid;gap:.6rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
+					<div><strong>Rhymes</strong><ul>${rhymes}</ul></div>
+					<div><strong>Genres</strong><ul>${genres}</ul></div>
+					<div><strong>Chords</strong><ul>${chords}</ul></div>
+					<div><strong>Inspirations</strong><ul>${insp}</ul></div>
+				</div>
+			`
+		} catch (e) {
+			console.error(e)
+			statusEl.textContent = 'Error: ' + (e?.message || e)
+			alert('Transcription failed: ' + (e?.message || e))
+		}
 	}
 </script>
