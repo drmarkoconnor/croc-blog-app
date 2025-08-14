@@ -371,3 +371,25 @@ main {
 	border-radius: 10px;
 }
 
+/* Mobile-first fluid type bumps for small iPhones only */
+@media (max-width: 430px) {
+	.btn {
+		font-size: clamp(1.15rem, 5.8vw, 1.45rem);
+		padding: 1rem 1.25rem;
+		border-radius: 14px;
+	}
+	.card h3 {
+		font-size: clamp(1.35rem, 6.2vw, 1.6rem);
+	}
+	.card p {
+		font-size: clamp(1.05rem, 4.6vw, 1.25rem);
+	}
+	.link-card .title {
+		font-size: clamp(1.15rem, 5.2vw, 1.4rem);
+	}
+	.link-card .delete {
+		width: 38px;
+		height: 38px;
+	}
+}
+
