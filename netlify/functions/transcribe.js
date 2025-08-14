@@ -210,7 +210,41 @@ exports.handler = async (event) => {
 		// 5) Summarize with GPT-mini
 		const analysis = await summarizeTranscript(transcriptText)
 
-		return resp(200, { ok: true, snippet, transcript, analysis })
+		// 6) Persist analysis
+		const a = analysis || {}
+		const inspirations = a?.songwriting_suggestions?.inspirations || []
+		const anPayload = [
+			{
+				transcript_id: transcript.id,
+				summary: a.summary || null,
+				todos: Array.isArray(a.todos) ? a.todos : null,
+				rhymes: Array.isArray(a.songwriting_suggestions?.rhymes)
+					? a.songwriting_suggestions.rhymes
+					: null,
+				genres: Array.isArray(a.songwriting_suggestions?.genres)
+					? a.songwriting_suggestions.genres
+					: null,
+				chord_progressions: Array.isArray(
+					a.songwriting_suggestions?.chord_progressions
+				)
+					? a.songwriting_suggestions.chord_progressions
+					: null,
+				inspirations: Array.isArray(inspirations) ? inspirations : null,
+				raw: analysis,
+				model: 'gpt-4o-mini',
+			},
+		]
+		const anRes = await sb('/rest/v1/transcript_analyses', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Prefer: 'return=representation',
+			},
+			body: JSON.stringify(anPayload),
+		})
+		const analysisRow = (await anRes.json())?.[0]
+
+		return resp(200, { ok: true, snippet, transcript, analysis: analysisRow })
 	} catch (e) {
 		return resp(500, { error: String(e.message || e) })
 	}

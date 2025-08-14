@@ -3,5 +3,144 @@ title: Song Ideas
 layout: layout.njk
 ---
 <h2>Song Ideas</h2>
-<p>Capture quick text or voice ideas, tag and theme them.</p>
+<p>Your recorded/uploaded snippets with transcript and generated songwriting suggestions.</p>
+
+<section class="card" style="overflow:auto;">
+	<table class="ideas-table" style="width:100%; border-collapse: collapse;">
+		<thead>
+			<tr>
+				<th style="text-align:left; padding:.5rem;">Title</th>
+				<th style="text-align:left; padding:.5rem;">Summary</th>
+				<th style="text-align:left; padding:.5rem;">Actions</th>
+			</tr>
+		</thead>
+		<tbody id="ideasBody"></tbody>
+	</table>
+</section>
+
+<template id="ideaRowTmpl">
+	<tr>
+		<td class="title" style="padding:.5rem; font-weight:700;"></td>
+		<td class="summary" style="padding:.5rem; color:var(--muted);"></td>
+		<td style="padding:.5rem; white-space:nowrap;">
+			<button class="btn btn-small" data-action="toggle">Details</button>
+			<button class="btn btn-small" data-action="play">Play</button>
+		</td>
+	</tr>
+	<tr class="details" style="display:none;">
+		<td colspan="3" style="padding:.5rem;">
+			<div class="card" style="background:rgba(255,255,255,0.06);">
+				<h4>Transcript</h4>
+				<pre class="transcript" style="white-space:pre-wrap"></pre>
+				<div class="grid" style="display:grid; gap:.75rem; grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+					<div>
+						<strong>TODOs</strong>
+						<ul class="todos"></ul>
+					</div>
+					<div>
+						<strong>Rhymes</strong>
+						<ul class="rhymes"></ul>
+					</div>
+					<div>
+						<strong>Genres</strong>
+						<ul class="genres"></ul>
+					</div>
+					<div>
+						<strong>Chords</strong>
+						<ul class="chords"></ul>
+					</div>
+					<div>
+						<strong>Inspirations</strong>
+						<ul class="inspirations"></ul>
+					</div>
+				</div>
+			</div>
+		</td>
+	</tr>
+</template>
+
+<script type="module">
+	import { initSupabase } from '/assets/js/supabase.js'
+	const supabase = await initSupabase()
+
+	const ideasBody = document.getElementById('ideasBody')
+	const tmpl = document.getElementById('ideaRowTmpl')
+
+	function audioUrl(storage_path) {
+		const base = window.ENV?.SUPABASE_URL || ''
+		if (!base || !storage_path) return ''
+		return `${base.replace(/\/$/, '')}/storage/v1/object/public/snippets/${encodeURI(storage_path)}`
+	}
+
+	function toLi(list) {
+		return (Array.isArray(list) ? list : []).map(v => `<li>${v}</li>`).join('')
+	}
+
+	async function loadIdeas() {
+		// Join snippets -> transcripts -> analyses (latest per snippet)
+		// For now, list recent snippets and pick their first transcript+analysis
+		const { data: rows, error } = await supabase
+			.from('song_snippets')
+			.select(`
+				id, title, storage_path, created_at,
+				transcripts:transcripts(
+					id, text, created_at,
+					analysis:transcript_analyses!inner(
+						id, summary, todos, rhymes, genres, chord_progressions, inspirations
+					)
+				)
+			`)
+			.order('created_at', { ascending: false })
+			.limit(100)
+		if (error) {
+			ideasBody.innerHTML = `<tr><td colspan="3">Error: ${error.message}</td></tr>`
+			return
+		}
+		if (!rows || rows.length === 0) {
+			ideasBody.innerHTML = `<tr><td colspan="3">No ideas yet. Use the Recorder to add one.</td></tr>`
+			return
+		}
+
+		ideasBody.innerHTML = ''
+		for (const s of rows) {
+			const tr = s.transcripts?.[0]
+			const an = tr?.analysis?.[0] || tr?.analysis // supabase-js may unwrap
+			const frag = document.importNode(tmpl.content, true)
+			const tds = frag.querySelectorAll('td')
+			tds[0].textContent = s.title || 'Untitled snippet'
+			tds[1].textContent = an?.summary || '—'
+
+			const detailsRow = frag.querySelector('tr.details')
+			frag.querySelector('.transcript').textContent = tr?.text || ''
+			frag.querySelector('.todos').innerHTML = toLi(an?.todos)
+			frag.querySelector('.rhymes').innerHTML = toLi(an?.rhymes)
+			frag.querySelector('.genres').innerHTML = toLi(an?.genres)
+			frag.querySelector('.chords').innerHTML = toLi(an?.chord_progressions)
+			const insp = Array.isArray(an?.inspirations) ? an.inspirations : []
+			frag.querySelector('.inspirations').innerHTML = insp.map(i => `<li><a href="${i.url}" target="_blank" rel="noopener">${i.title || i.url}</a></li>`).join('')
+
+			// Actions
+			frag.querySelector('[data-action="toggle"]').onclick = () => {
+				detailsRow.style.display = detailsRow.style.display === 'none' ? '' : 'none'
+			}
+			frag.querySelector('[data-action="play"]').onclick = (e) => {
+				const existing = detailsRow.querySelector('audio')
+				if (!existing) {
+					const a = document.createElement('audio')
+					a.controls = true
+					a.preload = 'none'
+					a.src = audioUrl(s.storage_path)
+					detailsRow.querySelector('.card').prepend(a)
+				} else {
+					existing.play()
+				}
+				if (detailsRow.style.display === 'none') detailsRow.style.display = ''
+			}
+
+			ideasBody.appendChild(frag)
+		}
+	}
+
+	loadIdeas()
+</script>
 
