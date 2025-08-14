@@ -156,6 +156,8 @@ main {
 	object-fit: cover;
 	filter: grayscale(100%);
 	animation: colorCycle 14s ease-in-out infinite;
+	z-index: 0;
+	pointer-events: none; /* don’t block clicks on overlay content */
 }
 @keyframes colorCycle {
 	0% {
@@ -181,6 +183,8 @@ main {
 		rgba(0, 0, 0, 0.18),
 		rgba(0, 0, 0, 0) 60%
 	);
+	z-index: 1;
+	pointer-events: none;
 }
 .hero .content {
 	position: relative;
@@ -214,17 +218,18 @@ main {
 	left: 0;
 	right: 0;
 	bottom: 5vh;
+	z-index: 30; /* above video and vignette */
 }
 .hub-overlay .card {
-	backdrop-filter: blur(4px);
-	background: rgba(26, 20, 53, 0.8);
+	backdrop-filter: blur(6px);
+	background: rgba(26, 20, 53, 0.6); /* more transparent */
 }
 .card {
 	background: linear-gradient(180deg, var(--panel), var(--panel-2));
 	border-radius: var(--radius);
 	box-shadow: var(--shadow);
 	padding: 1.2rem;
-	border: 1px solid #ffffff10;
+	border: 1px solid rgba(255, 255, 255, 0.18);
 }
 .card h3 {
 	margin-top: 0;
@@ -245,6 +250,9 @@ main {
 	font-weight: 800;
 	font-size: clamp(1.05rem, 2.2vw, 1.25rem);
 	box-shadow: 0 6px 18px rgba(123, 92, 255, 0.35);
+	cursor: pointer;
+	position: relative;
+	z-index: 2; /* ensure above any accidental overlays */
 }
 .btn:hover {
 	background: #6b8e23; /* olive green */
