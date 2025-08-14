@@ -270,6 +270,45 @@ main {
 	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 	margin-top: 1rem;
 }
+.form-wrap {
+	max-width: 720px;
+	margin: 0 auto 1.25rem;
+}
+.add-link.card {
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.32);
+	box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+}
+.add-link .row {
+	display: grid;
+	gap: 0.4rem;
+	margin-bottom: 0.9rem;
+}
+.add-link label {
+	font-weight: 700;
+	opacity: 0.95;
+}
+.add-link input[type='text'],
+.add-link input[type='url'] {
+	appearance: none;
+	border: 1px solid rgba(255, 255, 255, 0.38);
+	background: rgba(26, 20, 53, 0.6);
+	color: var(--text);
+	padding: 0.7rem 0.8rem;
+	border-radius: 12px;
+	font-size: 1rem;
+}
+.add-link input::placeholder {
+	color: #ffffffaa;
+}
+.add-link .actions {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+}
+.add-link .hint {
+	color: var(--muted);
+}
 .link-card {
 	position: relative;
 	border-radius: var(--radius);

@@ -4,16 +4,25 @@ layout: layout.njk
 ---
 <h2>Links</h2>
 
-<form id="add-link-form" class="add-link">
-  <input id="add-link-url" type="url" placeholder="Paste a URL (https://...)" required />
-  <button class="btn" type="submit">Add Link</button>
-  <small class="hint">Favicon used as background automatically.</small>
-  <noscript>Enable JavaScript to add links.</noscript>
-  <script type="module" src="/assets/js/links.js"></script>
-  <script>
-    // Optional: seed suggestions only if list is empty (best done via DB seed)
-  </script>
-</form>
+<div class="form-wrap">
+  <form id="add-link-form" class="add-link card">
+    <div class="row">
+      <label for="add-link-title">Title</label>
+      <input id="add-link-title" name="title" type="text" placeholder="Optional display title" />
+    </div>
+    <div class="row">
+      <label for="add-link-url">URL</label>
+      <input id="add-link-url" name="url" type="url" placeholder="https://example.com" required />
+    </div>
+    <div class="row actions">
+      <button class="btn" type="submit">Add Link</button>
+      <small class="hint">We’ll pick a nice site image automatically.</small>
+    </div>
+    <noscript>Enable JavaScript to add links.</noscript>
+  </form>
+</div>
 
 <section id="links-grid" class="links-grid" aria-live="polite"></section>
+
+<script type="module" src="/assets/js/links.js"></script>
 
