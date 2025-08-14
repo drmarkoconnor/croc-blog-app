@@ -2,5 +2,68 @@
 title: Lyric Book
 layout: layout.njk
 ---
-<h2>Your Lyric Book</h2>
-<p>Search, filter, and edit your song transcripts here.</p>
+
+<section class="card" id="authBar" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+	<div>
+		<strong>Songcraft Workspace</strong>
+		<span id="authStatus" style="opacity:.8;margin-left:.5rem">Checking session…</span>
+	</div>
+	<div id="authControls" style="display:flex;gap:.5rem;align-items:center">
+		<input type="email" id="authEmail" placeholder="you@example.com" style="display:none;appearance:none;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:#fff;padding:.5rem .6rem;border-radius:10px"/>
+		<button class="btn btn-small" id="btnSignIn" style="display:none">Sign in</button>
+		<button class="btn btn-small" id="btnSignOut" style="display:none;background:#444">Sign out</button>
+	</div>
+	<div style="flex:1 1 100%;height:1px;background:#ffffff13;margin-top:.5rem"></div>
+	<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+		<label>Song title <input id="songTitle" type="text" placeholder="Untitled" style="appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:#fff;padding:.4rem .5rem;border-radius:8px"/></label>
+		<label>Key
+			<select id="songKey" style="appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:#fff;padding:.45rem .5rem;border-radius:8px">
+				<option>C</option><option>G</option><option>D</option><option>A</option><option>E</option><option>B</option><option>F#</option><option>Db</option><option>Ab</option><option>Eb</option><option>Bb</option><option>F</option>
+			</select>
+		</label>
+		<label>BPM <input id="songBpm" type="number" min="40" max="220" value="90" style="width:5rem;appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:#fff;padding:.4rem .5rem;border-radius:8px"/></label>
+		<div>
+			<button class="btn btn-small" id="btnTransposeDown">– semitone</button>
+			<button class="btn btn-small" id="btnTransposeUp">+ semitone</button>
+		</div>
+		<div>
+			<button class="btn btn-small" id="btnNew">New</button>
+			<button class="btn btn-small" id="btnSaveVersion" style="background:#444;">Save version</button>
+			<button class="btn btn-small" id="btnExport">Export</button>
+			<label class="btn btn-small" style="cursor:pointer;background:#2a2a4a;">Import <input id="importFile" type="file" accept=".chordpro,.cho,.txt" style="display:none"/></label>
+		</div>
+	</div>
+</section>
+
+<section class="songwriter" style="display:grid;grid-template-columns:minmax(300px,1fr) minmax(260px,380px);gap:1rem;align-items:start">
+	<div class="pane">
+		<h3 style="margin:.2rem 0 .6rem">Lyric editor</h3>
+		<textarea id="editor" spellcheck="false" style="width:100%;min-height:58vh;font: 15px/1.5 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:#fff;border-radius:12px;padding:.8rem"></textarea>
+		<details style="margin-top:.6rem">
+			<summary>Recording mini-panel</summary>
+			<div id="recPanel" style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
+				<button class="btn btn-small" id="btnRec">Record</button>
+				<button class="btn btn-small" id="btnStop" style="background:#444;display:none">Stop</button>
+				<span id="recTimer" style="opacity:.85;min-width:6ch;text-align:center">00:00</span>
+				<audio id="recAudio" controls style="display:none"></audio>
+				<button class="btn btn-small" id="btnUpload" style="display:none">Save to song</button>
+			</div>
+			<ul id="audioList" style="margin-top:.5rem"></ul>
+		</details>
+	</div>
+	<div class="pane">
+		<h3 style="margin:.2rem 0 .6rem">Chord palette</h3>
+		<div id="palette" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
+		<h4 style="margin-top:1rem">Sevenths</h4>
+		<div id="palette7" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
+		<details style="margin-top:.6rem">
+			<summary>Borrowed + secondary</summary>
+			<div id="borrowed" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem;margin-top:.5rem"></div>
+		</details>
+		<div style="margin-top:1rem">
+			<button class="btn btn-small" id="btnAudition">Play chord</button>
+		</div>
+	</div>
+</section>
+
+<script type="module" src="/assets/js/songwriter.js"></script>
