@@ -81,7 +81,10 @@ create index if not exists transcripts_snippet_id_idx on public.transcripts (sni
 -- Storage RLS policies for 'snippets' bucket
 -- Folder convention: {user_id}/<filename>
 -- Select: owner can read their own files
-alter table storage.objects enable row level security;
+-- Note: storage.objects is owned by supabase_storage_admin in Supabase.
+-- Switch role for policy DDL; if this fails in your environment, run these
+-- storage policy statements as the storage owner via the Supabase UI.
+set local role supabase_storage_admin;
 
 drop policy if exists "snippets_select_own" on storage.objects;
 create policy "snippets_select_own" on storage.objects
@@ -109,3 +112,5 @@ create policy "snippets_delete_own" on storage.objects
   for delete using (
     bucket_id = 'snippets' and name like (auth.uid()::text || '/%')
   );
+
+reset role;
