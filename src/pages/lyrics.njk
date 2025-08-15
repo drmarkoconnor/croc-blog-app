@@ -31,8 +31,10 @@ layout: layout.njk
 
 <section class="songwriter" style="display:grid;grid-template-columns:minmax(300px,1fr) minmax(260px,380px);gap:1rem;align-items:start">
 	<div class="pane">
-		<h3 style="margin:.2rem 0 .6rem">Lyric editor</h3>
-		<textarea id="editor" class="lyric-input" spellcheck="false" style="width:100%;min-height:58vh;font: 15px/1.5 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;appearance:none;border:1px solid #d9d4f0;background:#f7f5ff;color:#1a1535;border-radius:12px;padding:.8rem"></textarea>
+	<h3 style="margin:.2rem 0 .6rem">Keyboard</h3>
+	<div id="piano" class="piano"></div>
+	<h3 style="margin:1rem 0 .6rem">Lyric editor</h3>
+	<textarea id="editor" class="lyric-input" spellcheck="false" style="width:100%;min-height:30vh;font: 15px/1.5 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;appearance:none;border:1px solid #d9d4f0;background:#f7f5ff;color:#1a1535;border-radius:12px;padding:.8rem"></textarea>
 		<details style="margin-top:.6rem">
 			<summary>Recording mini-panel</summary>
 			<div id="recPanel" style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
@@ -49,23 +51,6 @@ layout: layout.njk
 		</details>
 	</div>
 	<div class="pane chord-pane">
-		<h3 style="margin:.2rem 0 .6rem">Chord palette</h3>
-		<div id="palette" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
-		<h4 style="margin-top:1rem">Sevenths</h4>
-		<div id="palette7" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
-		<details style="margin-top:.6rem">
-			<summary>Borrowed + secondary</summary>
-			<div id="borrowed" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem;margin-top:.5rem"></div>
-		</details>
-		<div style="margin-top:1rem">
-			<button class="btn btn-small" id="btnAudition">Play chord</button>
-			<button class="btn btn-small" id="btnPlaySong" style="background:#2a2a4a">Play song</button>
-			<button class="btn btn-small" id="btnStopSong" style="background:#444">Stop</button>
-		</div>
-		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
-		<h3 style="margin:.2rem 0 .6rem">Keyboard</h3>
-		<div id="piano" class="piano"></div>
-		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
 		<h3 style="margin:.2rem 0 .6rem">Structure</h3>
 		<div class="structure" style="display:grid;gap:.6rem">
 			<div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
@@ -97,6 +82,20 @@ layout: layout.njk
 				<button class="btn btn-small" id="btnPrintChart" style="background:#444">Print chart</button>
 			</div>
 			<div id="barPreview" class="bar-grid"></div>
+		</div>
+		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
+		<h3 style="margin:.2rem 0 .6rem">Chord palette</h3>
+		<div id="palette" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
+		<h4 style="margin-top:1rem">Sevenths</h4>
+		<div id="palette7" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
+		<details style="margin-top:.6rem">
+			<summary>Borrowed + secondary</summary>
+			<div id="borrowed" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem;margin-top:.5rem"></div>
+		</details>
+		<div style="margin-top:1rem">
+			<button class="btn btn-small" id="btnAudition">Play chord</button>
+			<button class="btn btn-small" id="btnPlaySong" style="background:#2a2a4a">Play song</button>
+			<button class="btn btn-small" id="btnStopSong" style="background:#444">Stop</button>
 		</div>
 		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
 		<h4 style="margin:.2rem 0 .6rem">Recent songs</h4>

@@ -849,40 +849,67 @@ function ensureDeleteButton() {
 function renderPiano() {
 	const el = document.querySelector('#piano')
 	if (!el) return
-	const start = 60 - 4 // C4 minus 4 semitones = G3
-	const keys = []
-	for (let i = 0; i < 32; i++) keys.push(start + i) // ~2.5 octaves
+	// Build realistic keyboard: stack white keys in a flex row, position black keys on top
+	const start = 55 // G3 (MIDI ~55) as starting white key
+	const totalSemis = 32 // about 2.5 octaves
 	el.innerHTML = ''
-	el.style.display = 'grid'
-	el.style.gridAutoFlow = 'column'
-	el.style.gridAutoColumns = 'minmax(22px,1fr)'
-	el.style.gap = '2px'
-	keys.forEach((midi) => {
-		const name = Tone?.Frequency?.(midi, 'midi')?.toNote?.() || midi
-		const isSharp = /#/.test(name)
-		const btn = document.createElement('button')
-		btn.className = 'pkey'
-		btn.textContent = ''
-		btn.style.height = isSharp ? '90px' : '140px'
-		btn.style.alignSelf = 'end'
-		btn.style.borderRadius = '6px'
-		btn.style.border = '1px solid rgba(255,255,255,.2)'
-		btn.style.background = isSharp ? '#1c2032' : '#f3f3f7'
-		btn.style.color = isSharp ? '#fff' : '#111'
-		btn.style.position = 'relative'
-		btn.title = name
+	el.style.position = 'relative'
+	el.style.userSelect = 'none'
+	el.style.height = '180px'
+	el.style.padding = '8px 6px'
+	el.style.border = '1px solid rgba(255,255,255,.2)'
+	el.style.borderRadius = '12px'
+	el.style.background = 'linear-gradient(180deg, #f9f9fc, #ececf5)'
+	const whitesWrap = document.createElement('div')
+	whitesWrap.style.display = 'flex'
+	whitesWrap.style.gap = '2px'
+	whitesWrap.style.height = '100%'
+	whitesWrap.style.position = 'relative'
+	el.appendChild(whitesWrap)
+
+	// Helper to know if a pitch class is a black key
+	const isBlack = (n) => [1, 3, 6, 8, 10].includes(((n % 12) + 12) % 12)
+	const toNote = (midi) =>
+		Tone?.Frequency?.(midi, 'midi')?.toNote?.() || String(midi)
+
+	const whiteKeys = []
+	for (let i = 0; i < totalSemis; i++) {
+		const midi = start + i
+		if (isBlack(midi)) continue
+		whiteKeys.push(midi)
+	}
+	const whiteWidth = `${Math.max(24, Math.floor(800 / whiteKeys.length))}px`
+
+	// Create white keys first
+	whiteKeys.forEach((midi) => {
+		const name = toNote(midi)
+		const key = document.createElement('button')
+		key.className = 'pkey white'
+		key.title = name
+		key.style.flex = `0 0 ${whiteWidth}`
+		key.style.height = '100%'
+		key.style.background = '#fdfdff'
+		key.style.border = '1px solid #d5d7e6'
+		key.style.borderBottom = '3px solid #c7c9da'
+		key.style.borderRadius = '6px'
+		key.style.position = 'relative'
+		key.style.boxShadow = 'inset 0 -3px 0 #d7d9ea'
 		const startNote = async () => {
 			await ensurePiano()
 			try {
 				await Tone.start?.()
 			} catch {}
 			piano?.triggerAttack(name)
+			key.style.filter = 'brightness(0.96)'
 		}
 		const stopNote = () => {
 			piano?.triggerRelease(name)
+			key.style.filter = ''
 		}
-		btn.addEventListener('mousedown', startNote)
-		btn.addEventListener(
+		key.addEventListener('mousedown', startNote)
+		key.addEventListener('mouseup', stopNote)
+		key.addEventListener('mouseleave', stopNote)
+		key.addEventListener(
 			'touchstart',
 			(e) => {
 				e.preventDefault()
@@ -890,11 +917,77 @@ function renderPiano() {
 			},
 			{ passive: false }
 		)
-		btn.addEventListener('mouseup', stopNote)
-		btn.addEventListener('mouseleave', stopNote)
-		btn.addEventListener('touchend', stopNote)
-		el.appendChild(btn)
+		key.addEventListener('touchend', stopNote)
+		whitesWrap.appendChild(key)
 	})
+
+	// Create black keys positioned absolutely over whites
+	const blackLayer = document.createElement('div')
+	blackLayer.style.position = 'absolute'
+	blackLayer.style.left = '6px'
+	blackLayer.style.right = '6px'
+	blackLayer.style.top = '8px'
+	blackLayer.style.height = '62%'
+	blackLayer.style.pointerEvents = 'none'
+	el.appendChild(blackLayer)
+
+	// Compute x-offset for each semitone relative to white key index
+	let whiteIndex = -1
+	for (let i = 0; i < totalSemis; i++) {
+		const midi = start + i
+		const noteName = toNote(midi)
+		const black = isBlack(midi)
+		if (!black) whiteIndex++
+		if (!black) continue
+		// Position above between adjacent whites; typical offsets by pitch class
+		const pc = ((midi % 12) + 12) % 12
+		const offsetMap = { 1: 0.66, 3: 1.5, 6: 3.6, 8: 4.5, 10: 5.4 }
+		// approximate position within a 7-white-key group
+		const groupPos = offsetMap[pc % 12] || 0.66
+		const groupIdx = Math.floor(whiteIndex / 7)
+		const withinGroup = whiteIndex % 7
+		const px =
+			groupIdx * (7 * (parseInt(whiteWidth) + 2)) +
+			withinGroup * (parseInt(whiteWidth) + 2)
+		const x = px + groupPos * (parseInt(whiteWidth) + 2)
+		const key = document.createElement('button')
+		key.className = 'pkey black'
+		key.title = noteName
+		key.style.position = 'absolute'
+		key.style.left = `${Math.round(x)}px`
+		key.style.width = `${Math.floor(parseInt(whiteWidth) * 0.6)}px`
+		key.style.height = '100%'
+		key.style.background = 'linear-gradient(180deg, #222638, #0f1220)'
+		key.style.border = '1px solid #000'
+		key.style.borderRadius = '6px'
+		key.style.boxShadow = '0 4px 10px rgba(0,0,0,.45)'
+		key.style.pointerEvents = 'auto'
+		const startNote = async () => {
+			await ensurePiano()
+			try {
+				await Tone.start?.()
+			} catch {}
+			piano?.triggerAttack(noteName)
+			key.style.filter = 'brightness(1.15)'
+		}
+		const stopNote = () => {
+			piano?.triggerRelease(noteName)
+			key.style.filter = ''
+		}
+		key.addEventListener('mousedown', startNote)
+		key.addEventListener('mouseup', stopNote)
+		key.addEventListener('mouseleave', stopNote)
+		key.addEventListener(
+			'touchstart',
+			(e) => {
+				e.preventDefault()
+				startNote()
+			},
+			{ passive: false }
+		)
+		key.addEventListener('touchend', stopNote)
+		blackLayer.appendChild(key)
+	}
 }
 
 // Simple chord playback across the editor's chord tags [Cmaj7] etc.

@@ -249,6 +249,11 @@ main {
 .piano .pkey {
 	cursor: pointer;
 }
+.piano {
+	width: 100%;
+	max-width: 100%;
+	display: block;
+}
 .card h3 {
 	margin-top: 0;
 	font-size: clamp(1.25rem, 2.2vw, 1.6rem);
@@ -488,7 +493,7 @@ main {
 		grid-template-columns: 1fr !important;
 	}
 	.lyric-input {
-		min-height: 62vh !important;
+		min-height: 40vh !important;
 		font-size: 1.05rem !important;
 		padding: 1rem !important;
 		border-radius: 16px !important;
