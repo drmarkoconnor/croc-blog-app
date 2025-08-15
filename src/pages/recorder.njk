@@ -2,52 +2,81 @@
 title: Song Snippets Recorder
 layout: layout.njk
 ---
+
 <h2>Record or Upload Song Snippet</h2>
-<p>Record your idea or upload a voice memo. We’ll transcribe it and generate a concise summary with TODOs and songwriting suggestions.</p>
+<p>
+	Record your idea or upload a voice memo. We’ll transcribe it and generate some
+	songwriting suggestions and chords to consider.
+</p>
 
 <div class="form-wrap">
-	<div class="card" style="display:grid;gap:0.75rem;">
+	<div class="card" style="display: grid; gap: 0.75rem">
 		<label for="snippetTitle">Title (optional)</label>
-		<input id="snippetTitle" type="text" placeholder="e.g., Chorus idea in D minor" />
-			<div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+		<input
+			id="snippetTitle"
+			type="text"
+			placeholder="e.g., Chorus idea in D minor"
+		/>
+		<div
+			style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap"
+		>
 			<button class="btn" id="btnStart" type="button">Start Recording</button>
 			<button class="btn" id="btnStop" type="button">Stop</button>
 			<input id="fileInput" type="file" accept="audio/*" />
-			<button class="btn" id="btnUpload" type="button">Transcribe & Summarize</button>
-				<button class="btn" id="btnSave" type="button" disabled>Save</button>
-				<button class="btn" id="btnDiscard" type="button" disabled>Discard</button>
+			<button class="btn" id="btnUpload" type="button">
+				Transcribe & Summarize
+			</button>
+			<button class="btn" id="btnSave" type="button" disabled>Save</button>
+			<button class="btn" id="btnDiscard" type="button" disabled>
+				Discard
+			</button>
 		</div>
-		<audio id="preview" controls style="display:block;margin-top:0.5rem;"></audio>
-		<div id="status" style="color: var(--muted);"></div>
+		<audio
+			id="preview"
+			controls
+			style="display: block; margin-top: 0.5rem"
+		></audio>
+		<div id="status" style="color: var(--muted)"></div>
 	</div>
 </div>
 
-<div class="grid-2" style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));">
+<div
+	class="grid-2"
+	style="
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	"
+>
 	<section class="card">
 		<h3>Transcript</h3>
-		<pre id="transcript" style="white-space:pre-wrap"></pre>
+		<pre id="transcript" style="white-space: pre-wrap"></pre>
 	</section>
 	<section class="card">
-		<h3>Summary & TODOs</h3>
+		<h3>Song development tips...</h3>
 		<div id="summary"></div>
 	</section>
 </div>
 
 <script type="module">
-	import { startRec, stopRec, uploadAndTranscribe } from '/assets/js/recorder.js'
+	import {
+		startRec,
+		stopRec,
+		uploadAndTranscribe,
+	} from '/assets/js/recorder.js'
 
 	const btnStart = document.getElementById('btnStart')
 	const btnStop = document.getElementById('btnStop')
 	const fileInput = document.getElementById('fileInput')
 	const btnUpload = document.getElementById('btnUpload')
-		const preview = document.getElementById('preview')
+	const preview = document.getElementById('preview')
 	const statusEl = document.getElementById('status')
 	const titleEl = document.getElementById('snippetTitle')
 	const transcriptEl = document.getElementById('transcript')
 	const summaryEl = document.getElementById('summary')
-		const btnSave = document.getElementById('btnSave')
-		const btnDiscard = document.getElementById('btnDiscard')
-		let lastSnippetId
+	const btnSave = document.getElementById('btnSave')
+	const btnDiscard = document.getElementById('btnDiscard')
+	let lastSnippetId
 
 	let blob
 
@@ -95,16 +124,39 @@ layout: layout.njk
 
 			const a = res.analysis || {}
 			// Support both shapes: nested songwriting_suggestions (raw) and flat columns (DB row)
-			const todos = (a.todos || []).map(t => `<li>${t}</li>`).join('')
+			const todos = (a.todos || []).map((t) => `<li>${t}</li>`).join('')
 			const s = a.songwriting_suggestions || {}
-			const rhymesArr = Array.isArray(s.rhymes) ? s.rhymes : (Array.isArray(a.rhymes) ? a.rhymes : [])
-			const genresArr = Array.isArray(s.genres) ? s.genres : (Array.isArray(a.genres) ? a.genres : [])
-			const chordsArr = Array.isArray(s.chord_progressions) ? s.chord_progressions : (Array.isArray(a.chord_progressions) ? a.chord_progressions : [])
-			const inspArr = Array.isArray(s.inspirations) ? s.inspirations : (Array.isArray(a.inspirations) ? a.inspirations : [])
-			const rhymes = rhymesArr.map(t => `<li>${t}</li>`).join('')
-			const genres = genresArr.map(t => `<li>${t}</li>`).join('')
-			const chords = chordsArr.map(t => `<li><code>${t}</code></li>`).join('')
-			const insp = inspArr.map(i => `<li><a href="${i.url}" target="_blank" rel="noopener">${i.title || i.url}</a></li>`).join('')
+			const rhymesArr = Array.isArray(s.rhymes)
+				? s.rhymes
+				: Array.isArray(a.rhymes)
+				? a.rhymes
+				: []
+			const genresArr = Array.isArray(s.genres)
+				? s.genres
+				: Array.isArray(a.genres)
+				? a.genres
+				: []
+			const chordsArr = Array.isArray(s.chord_progressions)
+				? s.chord_progressions
+				: Array.isArray(a.chord_progressions)
+				? a.chord_progressions
+				: []
+			const inspArr = Array.isArray(s.inspirations)
+				? s.inspirations
+				: Array.isArray(a.inspirations)
+				? a.inspirations
+				: []
+			const rhymes = rhymesArr.map((t) => `<li>${t}</li>`).join('')
+			const genres = genresArr.map((t) => `<li>${t}</li>`).join('')
+			const chords = chordsArr.map((t) => `<li><code>${t}</code></li>`).join('')
+			const insp = inspArr
+				.map(
+					(i) =>
+						`<li><a href="${i.url}" target="_blank" rel="noopener">${
+							i.title || i.url
+						}</a></li>`
+				)
+				.join('')
 
 			summaryEl.innerHTML = `
 				<p>${a.summary || ''}</p>
@@ -124,31 +176,47 @@ layout: layout.njk
 			alert('Transcription failed: ' + (e?.message || e))
 		}
 	}
-		async function postIdea(id, action) {
-			const r = await fetch('/api/ideas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action }) })
-			if (!r.ok) throw new Error(await r.text())
-			return r.json()
+	async function postIdea(id, action) {
+		const r = await fetch('/api/ideas', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id, action }),
+		})
+		if (!r.ok) throw new Error(await r.text())
+		return r.json()
+	}
+	btnSave.onclick = async () => {
+		if (!lastSnippetId) return
+		try {
+			statusEl.textContent = 'Saving…'
+			await postIdea(lastSnippetId, 'save')
+			statusEl.textContent = 'Saved.'
+		} catch (e) {
+			statusEl.textContent = 'Save failed'
+			console.error(e)
 		}
-		btnSave.onclick = async () => {
-			if (!lastSnippetId) return
-			try {
-				statusEl.textContent = 'Saving…'
-				await postIdea(lastSnippetId, 'save')
-				statusEl.textContent = 'Saved.'
-			} catch (e) { statusEl.textContent = 'Save failed'; console.error(e) }
+	}
+	btnDiscard.onclick = async () => {
+		if (!lastSnippetId) return
+		if (
+			!confirm(
+				'Discard this snippet? This will delete its audio, transcript, and analysis.'
+			)
+		)
+			return
+		try {
+			statusEl.textContent = 'Discarding…'
+			await postIdea(lastSnippetId, 'discard')
+			statusEl.textContent = 'Discarded.'
+			btnSave.disabled = true
+			btnDiscard.disabled = true
+			preview.removeAttribute('src')
+			transcriptEl.textContent = ''
+			summaryEl.innerHTML = ''
+		} catch (e) {
+			statusEl.textContent = 'Discard failed'
+			console.error(e)
 		}
-		btnDiscard.onclick = async () => {
-			if (!lastSnippetId) return
-			if (!confirm('Discard this snippet? This will delete its audio, transcript, and analysis.')) return
-			try {
-				statusEl.textContent = 'Discarding…'
-				await postIdea(lastSnippetId, 'discard')
-				statusEl.textContent = 'Discarded.'
-				btnSave.disabled = true
-				btnDiscard.disabled = true
-				preview.removeAttribute('src')
-				transcriptEl.textContent = ''
-				summaryEl.innerHTML = ''
-			} catch (e) { statusEl.textContent = 'Discard failed'; console.error(e) }
-		}
+	}
 </script>
+
