@@ -10,24 +10,20 @@ export default async (request, context) => {
 		return context.next()
 	}
 
-	// Prefer context.env, then Node env for local dev
+	// Prefer context.env, then Node env for local dev; final fallback to hardcoded dev creds
 	const ce = context?.env || {}
 	const USER =
 		ce.SITE_BASIC_AUTH_USER ??
 		(typeof process !== 'undefined'
 			? process?.env?.SITE_BASIC_AUTH_USER
-			: undefined)
+			: undefined) ??
+		'croc'
 	const PASS =
 		ce.SITE_BASIC_AUTH_PASS ??
 		(typeof process !== 'undefined'
 			? process?.env?.SITE_BASIC_AUTH_PASS
-			: undefined)
-	if (!USER || !PASS) {
-		return new Response(
-			'Server misconfigured: missing SITE_BASIC_AUTH_USER/PASS',
-			{ status: 500 }
-		)
-	}
+			: undefined) ??
+		'cr0c'
 
 	const auth = request.headers.get('authorization') || ''
 	if (auth.startsWith('Basic ')) {
