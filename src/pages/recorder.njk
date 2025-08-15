@@ -94,11 +94,17 @@ layout: layout.njk
 			transcriptEl.textContent = res.transcript?.text || ''
 
 			const a = res.analysis || {}
+			// Support both shapes: nested songwriting_suggestions (raw) and flat columns (DB row)
 			const todos = (a.todos || []).map(t => `<li>${t}</li>`).join('')
-			const rhymes = (a.songwriting_suggestions?.rhymes || []).map(t => `<li>${t}</li>`).join('')
-			const genres = (a.songwriting_suggestions?.genres || []).map(t => `<li>${t}</li>`).join('')
-			const chords = (a.songwriting_suggestions?.chord_progressions || []).map(t => `<li><code>${t}</code></li>`).join('')
-			const insp = (a.songwriting_suggestions?.inspirations || []).map(i => `<li><a href="${i.url}" target="_blank" rel="noopener">${i.title || i.url}</a></li>`).join('')
+			const s = a.songwriting_suggestions || {}
+			const rhymesArr = Array.isArray(s.rhymes) ? s.rhymes : (Array.isArray(a.rhymes) ? a.rhymes : [])
+			const genresArr = Array.isArray(s.genres) ? s.genres : (Array.isArray(a.genres) ? a.genres : [])
+			const chordsArr = Array.isArray(s.chord_progressions) ? s.chord_progressions : (Array.isArray(a.chord_progressions) ? a.chord_progressions : [])
+			const inspArr = Array.isArray(s.inspirations) ? s.inspirations : (Array.isArray(a.inspirations) ? a.inspirations : [])
+			const rhymes = rhymesArr.map(t => `<li>${t}</li>`).join('')
+			const genres = genresArr.map(t => `<li>${t}</li>`).join('')
+			const chords = chordsArr.map(t => `<li><code>${t}</code></li>`).join('')
+			const insp = inspArr.map(i => `<li><a href="${i.url}" target="_blank" rel="noopener">${i.title || i.url}</a></li>`).join('')
 
 			summaryEl.innerHTML = `
 				<p>${a.summary || ''}</p>

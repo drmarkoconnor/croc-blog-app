@@ -30,6 +30,8 @@ module.exports = function (eleventyConfig) {
 	eleventyConfig.addPassthroughCopy({ 'src/assets': 'assets' })
 	// Expose quotes.json for client-side fetch
 	eleventyConfig.addPassthroughCopy({ 'src/_data/quotes.json': 'quotes.json' })
+	// Ensure Netlify headers are published (for CDN Basic Auth)
+	eleventyConfig.addPassthroughCopy('_headers')
 	// Not required to copy includes, but harmless if left out
 
 	// Image shortcode (Nunjucks)
