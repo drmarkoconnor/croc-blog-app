@@ -6,20 +6,9 @@ export default async (request, context) => {
 		return context.next()
 	}
 
-	// Prefer context.env, then Node env for local dev; final fallback to hardcoded dev creds
-	const ce = context?.env || {}
-	const USER =
-		ce.SITE_BASIC_AUTH_USER ??
-		(typeof process !== 'undefined'
-			? process?.env?.SITE_BASIC_AUTH_USER
-			: undefined) ??
-		'croc'
-	const PASS =
-		ce.SITE_BASIC_AUTH_PASS ??
-		(typeof process !== 'undefined'
-			? process?.env?.SITE_BASIC_AUTH_PASS
-			: undefined) ??
-		'cr0c'
+	// Static credentials (no env to avoid edge bundling issues)
+	const USER = 'croc'
+	const PASS = 'cr0c'
 
 	const auth = request.headers.get('authorization') || ''
 	if (auth.startsWith('Basic ')) {
