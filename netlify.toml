@@ -2,10 +2,6 @@
   command = "eleventy"
   publish = "_site"
 
-[[edge_functions]]
-  path = "/*"
-  function = "protect"
-
 [[redirects]]
   from = "/api/transcribe"
   to = "/.netlify/functions/transcribe"
