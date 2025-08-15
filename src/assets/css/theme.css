@@ -392,6 +392,16 @@ main {
 
 /* Mobile-first fluid type bumps for small iPhones only */
 @media (max-width: 430px) {
+	/* On small iPhones, let the hub grid participate in layout and allow scrolling */
+	.hero {
+		min-height: auto;
+		overflow: visible;
+		padding-bottom: 1rem;
+	}
+	.hub-overlay {
+		position: static;
+		margin-top: 1rem;
+	}
 	body {
 		font-size: clamp(17px, 4.5vw, 19px);
 	}
