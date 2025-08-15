@@ -6,7 +6,6 @@
   for = "/*"
   [headers.values]
     Basic-Auth = "croc:cr0c"
-  X-Toml-Header = "from-netlify-toml"
 
 [[edge_functions]]
   path = "/*"
