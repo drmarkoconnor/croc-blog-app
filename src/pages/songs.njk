@@ -1,0 +1,51 @@
+---
+title: Songs
+layout: layout.njk
+---
+
+<section class="card">
+  <h2 style="margin:0 0 .5rem">All Songs</h2>
+  <div id="songsList" style="display:grid;gap:.5rem"></div>
+</section>
+
+<script type="module">
+const $ = (s, r=document)=>r.querySelector(s)
+function row(s){
+  const d=document.createElement('div')
+  d.style.display='grid'
+  d.style.gridTemplateColumns='1fr auto auto'
+  d.style.gap='.5rem'
+  d.style.alignItems='center'
+  const t=document.createElement('div')
+  t.textContent = `${s.title||'Untitled'} · ${s.key||''} · ${s.bpm||''} BPM`
+  const open=document.createElement('a')
+  open.className='btn btn-small'
+  open.textContent='Open'
+  open.href=`/lyrics/?id=${encodeURIComponent(s.id)}`
+  const del=document.createElement('button')
+  del.className='btn btn-small'
+  del.style.background='#5a2233'
+  del.textContent='Delete'
+  del.onclick=async()=>{
+    if(!confirm('Delete this song?'))return
+    const res=await fetch('/.netlify/functions/songcraft',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'delete',id:s.id})})
+    if(res.ok) load()
+    else alert('Delete failed')
+  }
+  d.append(t,open,del)
+  return d
+}
+async function load(){
+  const list=$('#songsList'); list.textContent='Loading…'
+  try{
+    const r=await fetch('/.netlify/functions/songcraft?action=list')
+    const j=await r.json()
+    list.innerHTML=''
+    ;(j.songs||[]).forEach(s=>list.appendChild(row(s)))
+    if(!(j.songs||[]).length){
+      const p=document.createElement('p'); p.style.opacity='.8'; p.textContent='No songs yet.'; list.appendChild(p)
+    }
+  }catch{ list.textContent='Error loading.' }
+}
+load()
+</script>

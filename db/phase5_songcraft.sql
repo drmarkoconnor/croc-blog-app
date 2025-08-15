@@ -6,7 +6,6 @@ create table if not exists public.songs (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   owner_id uuid not null default auth.uid(),
-  visitor_id text,
   title text not null default 'Untitled',
   key text not null default 'C',
   mode text not null default 'major',
@@ -39,7 +38,6 @@ create table if not exists public.audio_ideas (
 -- Indexes
 create index if not exists songs_owner_updated_idx on public.songs (owner_id, updated_at desc);
 create index if not exists songs_updated_idx on public.songs (updated_at desc);
-create index if not exists songs_visitor_updated_idx on public.songs (visitor_id, updated_at desc);
 create index if not exists audio_ideas_song_idx on public.audio_ideas (song_id, created_at desc);
 
 -- RLS

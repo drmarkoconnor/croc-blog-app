@@ -1,4 +1,4 @@
-// Songcraft-style workspace: auth, editor, chord palette, autosave, audio capture
+// Songcraft-style workspace: editor, chord palette, autosave, audio capture
 import { initSupabase } from '/assets/js/supabase.js'
 
 // Tiny utilities
@@ -116,16 +116,7 @@ async function loadDraft(id) {
 let sb,
 	user,
 	songId = null
-// Anonymous visitor id for server function (sticky in localStorage)
-const VISITOR_ID_KEY = 'songcraft.visitorId'
-function getVisitorId() {
-	let id = localStorage.getItem(VISITOR_ID_KEY)
-	if (!id) {
-		id = (crypto?.randomUUID?.() || Math.random().toString(36).slice(2))
-		localStorage.setItem(VISITOR_ID_KEY, id)
-	}
-	return id
-}
+// Single-user mode; server function uses service role
 let autosaveTimer
 async function autosave() {
 	clearTimeout(autosaveTimer)
@@ -144,7 +135,7 @@ async function autosave() {
 				method: 'POST',
 				headers: {
 					'content-type': 'application/json',
-					'x-visitor-id': getVisitorId(),
+					// no visitor id required in single-user mode
 				},
 				body: JSON.stringify({ action: 'upsert', id: songId, ...payload }),
 			})
@@ -354,72 +345,14 @@ function fmt(t) {
 	const el = $('#btnUpload')
 	if (el)
 		el.addEventListener('click', async () => {
-			if (!user || !songId) {
-				alert('Sign in first or start typing to create the song.')
-				return
-			}
-			const resp = await fetch($('#recAudio').src)
-			const buf = await resp.arrayBuffer()
-			const filename = `${crypto.randomUUID()}.webm`
-			const path = `${user.id}/${songId}/${filename}`
-			const { error } = await sb.storage
-				.from('audio_ideas')
-				.upload(path, new Blob([buf], { type: 'audio/webm' }), {
-					upsert: false,
-				})
-			if (error) {
-				alert('Upload failed')
-				return
-			}
-			await sb.from('audio_ideas').insert({
-				song_id: songId,
-				storage_path: path,
-				duration_sec: Math.floor((Date.now() - t0) / 1000),
-			})
-			const li = document.createElement('li')
-			li.textContent = `Saved: ${filename}`
-			$('#audioList').appendChild(li)
-			$('#btnUpload').style.display = 'none'
+			if (!songId) return alert('Type something first to create the song.')
+			alert('Upload coming soon (server function wiring needed).')
 		})
 }
 
-// Auth + init
+// Init
 async function init() {
-	try {
-		sb = await initSupabase()
-	} catch (e) {
-		sb = null
-	}
-
-	// If Supabase configured, check session; else hide auth UI and run offline
-	if (sb) {
-		try {
-			const {
-				data: { session },
-			} = await sb.auth.getSession()
-			user = session?.user || null
-			sb.auth.onAuthStateChange((_evt, sess) => {
-				user = sess?.user || null
-				$('#authStatus').textContent = user ? 'Signed in' : 'Signed out'
-				$('#authEmail').style.display = user ? 'none' : ''
-				$('#btnSignIn').style.display = user ? 'none' : ''
-				$('#btnSignOut').style.display = user ? '' : 'none'
-			})
-			$('#authStatus').textContent = user ? 'Signed in' : 'Signed out'
-			$('#authEmail').style.display = user ? 'none' : ''
-			$('#btnSignIn').style.display = user ? 'none' : ''
-			$('#btnSignOut').style.display = user ? '' : 'none'
-		} catch (e) {
-			// Fallback to offline
-			sb = null
-		}
-	}
-	if (!sb) {
-		$('#authStatus').textContent = 'Offline mode'
-		$('#authEmail').style.display = 'none'
-		$('#btnSignIn').style.display = 'none'
-		$('#btnSignOut').style.display = 'none'
-	}
+	// No auth required
 
 	// Restore draft
 	const d = await loadDraft('current')
@@ -429,7 +362,28 @@ async function init() {
 		$('#songBpm').value = d.payload.bpm || 90
 		$('#editor').value = d.payload.body_chordpro || ''
 	}
+	// If ?id= is present, load that song from server
+	const qid = new URLSearchParams(location.search).get('id')
+	if (qid) {
+		try {
+			const r = await fetch(
+				`/.netlify/functions/songcraft?action=get&id=${encodeURIComponent(qid)}`
+			)
+			if (r.ok) {
+				const dj = await r.json()
+				const row = dj.song
+				if (row) {
+					songId = row.id
+					$('#songTitle').value = row.title || ''
+					$('#songKey').value = row.key || 'C'
+					$('#songBpm').value = row.bpm || 90
+					$('#editor').value = row.body_chordpro || ''
+				}
+			}
+		} catch {}
+	}
 	renderPalette()
+	renderRecent()
 
 	// Handlers
 	$('#songKey').addEventListener('change', () => {
@@ -519,16 +473,60 @@ async function init() {
 	$('#btnSaveVersion')?.addEventListener('click', async () => {
 		if (!songId) await autosave() // ensure song exists
 		if (!songId) return alert('Type something first to create the song.')
-		const label = prompt('Label for this version (optional):', new Date().toLocaleString())
+		const label = prompt(
+			'Label for this version (optional):',
+			new Date().toLocaleString()
+		)
 		try {
 			const res = await fetch('/.netlify/functions/songcraft', {
 				method: 'POST',
 				headers: {
 					'content-type': 'application/json',
-					'x-visitor-id': getVisitorId(),
+					// single-user mode
 				},
-				body: JSON.stringify({ action: 'saveVersion', song_id: songId, label, body_chordpro: $('#editor').value }),
+				body: JSON.stringify({
+					action: 'saveVersion',
+					song_id: songId,
+					label,
+					body_chordpro: $('#editor').value,
+				}),
 			})
+
+			// Add delete when a song is loaded
+			if (!$('#btnDelete')) {
+				const btn = document.createElement('button')
+				btn.id = 'btnDelete'
+				btn.className = 'btn btn-small'
+				btn.style.background = '#5a2233'
+				btn.textContent = 'Delete'
+				// place next to Export button
+				const controls =
+					document.querySelector('#importFile')?.parentElement?.parentElement
+				if (controls) controls.appendChild(btn)
+				btn.addEventListener('click', async () => {
+					if (!songId) return alert('No song selected')
+					if (!confirm('Delete this song? This cannot be undone.')) return
+					try {
+						const res = await fetch('/.netlify/functions/songcraft', {
+							method: 'POST',
+							headers: { 'content-type': 'application/json' },
+							body: JSON.stringify({ action: 'delete', id: songId }),
+						})
+						if (!res.ok) return alert('Delete failed')
+						// Reset UI
+						songId = null
+						$('#songTitle').value = ''
+						$('#songKey').value = 'C'
+						$('#songBpm').value = 90
+						$('#editor').value = ''
+						renderPalette()
+						renderRecent()
+						alert('Deleted')
+					} catch {
+						alert('Delete failed')
+					}
+				})
+			}
 			if (res.ok) alert('Version saved')
 			else alert('Failed to save version')
 		} catch {
@@ -536,25 +534,56 @@ async function init() {
 		}
 	})
 
-	// Auth controls (email link), show only if Supabase available
-	if (sb) {
-		$('#btnSignIn').addEventListener('click', async () => {
-			const email = $('#authEmail').value.trim()
-			if (!email) return alert('Enter email')
-			const { error } = await sb.auth.signInWithOtp({
-				email,
-				options: { emailRedirectTo: window.location.origin.replace('http://localhost:8888','') + '/lyrics/' },
-			})
-			if (error) return alert('Sign-in failed')
-			alert('Check your email for a sign-in link.')
-		})
-		$('#btnSignOut').addEventListener('click', async () => {
-			await sb.auth.signOut()
-			location.reload()
-		})
-	}
+	// No auth controls
 }
 
 // Kick off
 init()
+
+// Recent songs (top 5)
+async function renderRecent() {
+	try {
+		const res = await fetch('/.netlify/functions/songcraft?action=list')
+		if (!res.ok) return
+		const j = await res.json()
+		const list = Array.isArray(j.songs) ? j.songs.slice(0, 5) : []
+		const ul = $('#recentSongs')
+		if (!ul) return
+		ul.innerHTML = ''
+		if (!list.length) {
+			const li = document.createElement('li')
+			li.style.opacity = '.8'
+			li.textContent = 'No recent songs yet.'
+			ul.appendChild(li)
+			return
+		}
+		for (const s of list) {
+			const li = document.createElement('li')
+			li.innerHTML = `<button class="btn btn-small" style="width:100%;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" data-id="${
+				s.id
+			}">${s.title || 'Untitled'} · ${s.key || ''} · ${
+				s.bpm || ''
+			} BPM</button>`
+			li.querySelector('button').addEventListener('click', async () => {
+				try {
+					const r = await fetch(
+						`/.netlify/functions/songcraft?action=get&id=${encodeURIComponent(
+							s.id
+						)}`
+					)
+					if (!r.ok) return
+					const dj = await r.json()
+					const row = dj.song || {}
+					songId = row.id || s.id
+					$('#songTitle').value = row.title || s.title || ''
+					$('#songKey').value = row.key || s.key || 'C'
+					$('#songBpm').value = row.bpm || s.bpm || 90
+					if (row.body_chordpro) $('#editor').value = row.body_chordpro
+					renderPalette()
+				} catch {}
+			})
+			ul.appendChild(li)
+		}
+	} catch {}
+}
 
