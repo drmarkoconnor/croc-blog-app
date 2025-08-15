@@ -183,7 +183,8 @@ exports.handler = async (event) => {
 			if (!rows?.length) return { statusCode: 403, body: 'Not allowed' }
 
 			const contentType =
-				event.headers?.['content-type'] || event.headers?.['Content-Type'] ||
+				event.headers?.['content-type'] ||
+				event.headers?.['Content-Type'] ||
 				'application/octet-stream'
 			const buf = event.body
 				? event.isBase64Encoded
@@ -209,9 +210,9 @@ exports.handler = async (event) => {
 			const objectPath = `song/${ownerId}/${songId}/${fileName}`
 			const up = await fetch(
 				SUPABASE_URL.replace(/\/$/, '') +
-					`/storage/v1/object/${encodeURIComponent(bucket)}/${encodeURIComponent(
-						objectPath
-					)}`,
+					`/storage/v1/object/${encodeURIComponent(
+						bucket
+					)}/${encodeURIComponent(objectPath)}`,
 				{
 					method: 'POST',
 					headers: {
@@ -230,9 +231,7 @@ exports.handler = async (event) => {
 
 			const publicUrl =
 				SUPABASE_URL.replace(/\/$/, '') +
-				`/storage/v1/object/public/${encodeURIComponent(
-					bucket
-				)}/${objectPath}`
+				`/storage/v1/object/public/${encodeURIComponent(bucket)}/${objectPath}`
 			return json({ ok: true, url: publicUrl, path: objectPath })
 		}
 
@@ -289,10 +288,12 @@ exports.handler = async (event) => {
 		// Delete a specific uploaded audio take
 		if (method === 'POST' && action === 'deleteAudio') {
 			const { song_id: songId, path } = body
-			if (!songId || !path) return { statusCode: 400, body: 'Missing songId or path' }
+			if (!songId || !path)
+				return { statusCode: 400, body: 'Missing songId or path' }
 			// Verify ownership and path scope
 			const prefix = `song/${ownerId}/${songId}/`
-			if (!path.startsWith(prefix)) return { statusCode: 403, body: 'Not allowed' }
+			if (!path.startsWith(prefix))
+				return { statusCode: 403, body: 'Not allowed' }
 			const g = await sb(
 				`/rest/v1/songs?id=eq.${encodeURIComponent(
 					songId
@@ -306,7 +307,10 @@ exports.handler = async (event) => {
 					`/storage/v1/object/${encodeURIComponent(bucket)}/${path}`,
 				{
 					method: 'DELETE',
-					headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+					headers: {
+						apikey: SERVICE_KEY,
+						Authorization: `Bearer ${SERVICE_KEY}`,
+					},
 				}
 			)
 			if (!del.ok) {

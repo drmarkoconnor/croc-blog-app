@@ -246,7 +246,9 @@ main {
 	background: #2a334a;
 }
 /* Piano keyboard minimal styles (additional inline styles set in JS) */
-.piano .pkey { cursor: pointer; }
+.piano .pkey {
+	cursor: pointer;
+}
 .card h3 {
 	margin-top: 0;
 	font-size: clamp(1.25rem, 2.2vw, 1.6rem);
@@ -255,41 +257,73 @@ main {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	gap: 6px;
-	margin-top: .2rem;
-	background: rgba(255,255,255,0.06);
-	border: 1px solid rgba(255,255,255,0.12);
+	margin-top: 0.2rem;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid rgba(255, 255, 255, 0.12);
 	border-radius: 10px;
 	padding: 6px;
 }
+.bar-grid.compact {
+	gap: 4px;
+	padding: 4px;
+}
+.bar-grid.large {
+	gap: 8px;
+	padding: 10px;
+}
 .bar-cell {
 	min-height: 46px;
-	background: rgba(255,255,255,0.08);
-	border: 1px solid rgba(255,255,255,0.18);
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.18);
 	border-radius: 8px;
 	padding: 6px;
 	font-weight: 800;
 	color: #fff;
 	position: relative;
 }
+.bar-grid.compact .bar-cell {
+	min-height: 38px;
+	padding: 4px;
+	font-weight: 700;
+}
+.bar-grid.large .bar-cell {
+	min-height: 60px;
+	padding: 10px;
+	font-size: 1.05rem;
+}
 .bar-section {
 	font-weight: 900;
-	letter-spacing: .02em;
+	letter-spacing: 0.02em;
 	color: #fff;
-	opacity: .9;
-	margin-top: .25rem;
+	opacity: 0.9;
+	margin-top: 0.25rem;
 }
 .bar-cell .beat-grid {
 	position: absolute;
-	left: 0; right: 0; bottom: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
 	height: 4px;
 	display: grid;
 	grid-auto-flow: column;
 	grid-auto-columns: 1fr;
 }
-.bar-cell .beat-grid span { background: rgba(255,255,255,0.2); margin: 0 1px; border-radius: 2px; }
+.bar-cell .beat-grid span {
+	background: rgba(255, 255, 255, 0.2);
+	margin: 0 1px;
+	border-radius: 2px;
+}
+.bar-grid.compact .bar-cell .beat-grid {
+	height: 3px;
+}
+.bar-grid.large .bar-cell .beat-grid {
+	height: 5px;
+}
 
 @media (max-width: 430px) {
-	.bar-grid { grid-template-columns: repeat(2, 1fr); }
+	.bar-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
 }
 .card p {
 	color: #fff;
@@ -518,6 +552,61 @@ main {
 	.link-card .delete {
 		width: 38px;
 		height: 38px;
+	}
+}
+
+/* Print-friendly chart styles */
+@media print {
+	/* Simplify visuals for printing */
+	body {
+		background: #fff !important;
+		color: #000 !important;
+		font-size: 14px;
+	}
+	.welcome-banner,
+	.hero,
+	.hub-overlay,
+	.nav,
+	.hero-title-bar,
+	.btn,
+	input,
+	select,
+	label,
+	textarea,
+	audio,
+	details,
+	#piano,
+	#recPanel,
+	#recentSongs,
+	hr {
+		display: none !important;
+	}
+	.card,
+	.section,
+	.pane,
+	.songwriter {
+		background: #fff !important;
+		box-shadow: none !important;
+		border: none !important;
+	}
+	.bar-grid {
+		background: #fff !important;
+		border: 1px solid #000 !important;
+		gap: 8px;
+		padding: 8px;
+	}
+	.bar-cell {
+		background: #fff !important;
+		border: 1px solid #000 !important;
+		color: #000 !important;
+		min-height: 56px;
+	}
+	.bar-section {
+		color: #000 !important;
+		margin: 0.4rem 0 0.2rem;
+	}
+	.bar-cell .beat-grid span {
+		background: #000 !important;
 	}
 }
 

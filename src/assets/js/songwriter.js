@@ -141,7 +141,10 @@ async function autosave() {
 			})
 			if (res.ok) {
 				const j = await res.json()
-				if (!songId && j?.id) { songId = j.id; ensureDeleteButton() }
+				if (!songId && j?.id) {
+					songId = j.id
+					ensureDeleteButton()
+				}
 			}
 		} catch (e) {
 			// ignore; remain local-only if offline
@@ -179,18 +182,23 @@ function insertBarDelimiter() {
 	const ed = document.querySelector('#editor')
 	if (!ed) return
 	insertAtCursor(ed, ' | ')
-	autosave(); renderBarPreview()
+	autosave()
+	renderBarPreview()
 }
 function addEmptyBars(n = 4) {
 	const ed = document.querySelector('#editor')
 	if (!ed) return
 	const bars = Array.from({ length: n }, () => ' | ').join('')
 	insertAtCursor(ed, bars)
-	autosave(); renderBarPreview()
+	autosave()
+	renderBarPreview()
 }
 function parseBarsDetailed() {
 	const text = document.querySelector('#editor')?.value || ''
-	const beatsPerBar = parseInt(document.querySelector('#timeBeats')?.value || '4', 10)
+	const beatsPerBar = parseInt(
+		document.querySelector('#timeBeats')?.value || '4',
+		10
+	)
 	const lines = text.split(/\n/)
 	const out = [] // items: { type:'section', title } | { type:'bar', chords:[{sym,beats}] }
 	const chordToken = /(\[([^\]]+)\]|([A-G](?:#|b)?[^\s\|\{\}]*))(?:\{(\d+)\})?/g
@@ -213,7 +221,10 @@ function parseBarsDetailed() {
 				for (let j = out.length - 1; j >= 0; j--) {
 					if (out[j]?.type === 'bar') {
 						const prev = out[j]
-						out.push({ type: 'bar', chords: prev.chords.map((c) => ({ ...c })) })
+						out.push({
+							type: 'bar',
+							chords: prev.chords.map((c) => ({ ...c })),
+						})
 						break
 					}
 				}
@@ -251,10 +262,14 @@ function renderBarPreview() {
 	if (!wrap) return
 	const bpl = parseInt(document.querySelector('#barsPerLine')?.value || '4', 10)
 	const beats = parseInt(document.querySelector('#timeBeats')?.value || '4', 10)
+	const layoutSel = document.querySelector('#chartLayout')?.value || 'comfy'
 	const parsed = parseBarsDetailed()
 	const items = parsed.items
 	wrap.innerHTML = ''
 	wrap.style.gridTemplateColumns = `repeat(${bpl}, 1fr)`
+	wrap.classList.remove('compact', 'large')
+	if (layoutSel === 'compact') wrap.classList.add('compact')
+	if (layoutSel === 'large') wrap.classList.add('large')
 	items.forEach((it) => {
 		if (it.type === 'section') {
 			const sec = document.createElement('div')
@@ -267,7 +282,9 @@ function renderBarPreview() {
 		const cell = document.createElement('div')
 		cell.className = 'bar-cell'
 		const label = it.chords
-			.map((c) => (c.beats && c.beats !== beats ? `${c.sym}(${c.beats})` : c.sym))
+			.map((c) =>
+				c.beats && c.beats !== beats ? `${c.sym}(${c.beats})` : c.sym
+			)
 			.join('  ')
 		cell.textContent = label || '—'
 		const beatsRow = document.createElement('div')
@@ -282,7 +299,7 @@ function renderBarPreview() {
 }
 
 // Audio audition via Tone.js (optional)
-let Tone, synth, poly, TonalMod, reverb, eq, piano
+let Tone, synth, poly, TonalMod, reverb, eq, piano, metroHigh, metroLow
 // (Removed instrument preference; piano is the only voice)
 async function ensureTone() {
 	if (Tone) return
@@ -306,6 +323,21 @@ async function ensureTone() {
 		}).connect(reverb)
 		// Optional: lazy-load tonal for chord parsing
 		TonalMod = await import('https://esm.sh/@tonaljs/tonal@5')
+		// Metronome click synths
+		try {
+			metroHigh = new Tone.MembraneSynth({
+				pitchDecay: 0.008,
+				octaves: 4,
+				oscillator: { type: 'sine' },
+				envelope: { attack: 0.001, decay: 0.05, sustain: 0.0, release: 0.01 },
+			}).connect(eq)
+			metroLow = new Tone.MembraneSynth({
+				pitchDecay: 0.008,
+				octaves: 4,
+				oscillator: { type: 'sine' },
+				envelope: { attack: 0.001, decay: 0.06, sustain: 0.0, release: 0.02 },
+			}).connect(eq)
+		} catch {}
 	} catch (e) {
 		console.warn('Tone load failed; fallback silent', e)
 	}
@@ -420,23 +452,23 @@ async function ensurePiano() {
 		// For a Steinway-like tone, these suffice for preview; can swap later
 		piano = new Tone.Sampler(
 			{
-				'A1': 'A1.mp3',
-				'C2': 'C2.mp3',
+				A1: 'A1.mp3',
+				C2: 'C2.mp3',
 				'D#2': 'Ds2.mp3',
 				'F#2': 'Fs2.mp3',
-				'A2': 'A2.mp3',
-				'C3': 'C3.mp3',
+				A2: 'A2.mp3',
+				C3: 'C3.mp3',
 				'D#3': 'Ds3.mp3',
 				'F#3': 'Fs3.mp3',
-				'A3': 'A3.mp3',
-				'C4': 'C4.mp3',
+				A3: 'A3.mp3',
+				C4: 'C4.mp3',
 				'D#4': 'Ds4.mp3',
 				'F#4': 'Fs4.mp3',
-				'A4': 'A4.mp3',
-				'C5': 'C5.mp3',
+				A4: 'A4.mp3',
+				C5: 'C5.mp3',
 				'D#5': 'Ds5.mp3',
 				'F#5': 'Fs5.mp3',
-				'A5': 'A5.mp3',
+				A5: 'A5.mp3',
 			},
 			{
 				baseUrl: 'https://tonejs.github.io/audio/salamander/',
@@ -523,10 +555,12 @@ function fmt(t) {
 			if (!songId) return alert('Type something first to create the song.')
 			if (!chunks?.length) return alert('No recording to upload.')
 			try {
-				await ensureTone(); // no-op if already
+				await ensureTone() // no-op if already
 				const blob = new Blob(chunks, { type: 'audio/webm' })
 				const res = await fetch(
-					`/.netlify/functions/songcraft?action=uploadAudio&songId=${encodeURIComponent(songId)}`,
+					`/.netlify/functions/songcraft?action=uploadAudio&songId=${encodeURIComponent(
+						songId
+					)}`,
 					{
 						method: 'POST',
 						headers: { 'content-type': 'audio/webm' },
@@ -602,9 +636,11 @@ async function init() {
 		$('#editor').value = transposeChordPro($('#editor').value, 1, pref)
 		autosave()
 	})
-    $('#btnAudition').addEventListener('click', async () => {
-		await ensureTone();
-        try { await Tone.start?.() } catch {}
+	$('#btnAudition').addEventListener('click', async () => {
+		await ensureTone()
+		try {
+			await Tone.start?.()
+		} catch {}
 		const val = $('#editor').value
 		const pos = $('#editor').selectionStart || 0
 		const upto = val.slice(0, pos)
@@ -621,10 +657,8 @@ async function init() {
 	$('#btnAdd4Bars')?.addEventListener('click', () => addEmptyBars(4))
 	$('#timeBeats')?.addEventListener('change', renderBarPreview)
 	$('#barsPerLine')?.addEventListener('change', renderBarPreview)
-
-	// Play/Stop song buttons
-	$('#btnPlaySong')?.addEventListener('click', () => playSongFromEditor())
-	$('#btnStopSong')?.addEventListener('click', () => stopSong())
+	$('#chartLayout')?.addEventListener('change', renderBarPreview)
+	$('#btnPrintChart')?.addEventListener('click', () => window.print())
 
 	// Play/Stop song buttons
 	$('#btnPlaySong')?.addEventListener('click', () => playSongFromEditor())
@@ -781,7 +815,8 @@ function ensureDeleteButton() {
 	btn.className = 'btn btn-small'
 	btn.style.background = '#5a2233'
 	btn.textContent = 'Delete'
-	const controls = document.querySelector('#importFile')?.parentElement?.parentElement
+	const controls =
+		document.querySelector('#importFile')?.parentElement?.parentElement
 	if (controls) controls.appendChild(btn)
 	btn.addEventListener('click', async () => {
 		if (!songId) return alert('No song selected')
@@ -837,12 +872,24 @@ function renderPiano() {
 		btn.style.position = 'relative'
 		btn.title = name
 		const startNote = async () => {
-			await ensurePiano(); try { await Tone.start?.() } catch {}
+			await ensurePiano()
+			try {
+				await Tone.start?.()
+			} catch {}
 			piano?.triggerAttack(name)
 		}
-		const stopNote = () => { piano?.triggerRelease(name) }
+		const stopNote = () => {
+			piano?.triggerRelease(name)
+		}
 		btn.addEventListener('mousedown', startNote)
-		btn.addEventListener('touchstart', (e) => { e.preventDefault(); startNote() }, { passive: false })
+		btn.addEventListener(
+			'touchstart',
+			(e) => {
+				e.preventDefault()
+				startNote()
+			},
+			{ passive: false }
+		)
 		btn.addEventListener('mouseup', stopNote)
 		btn.addEventListener('mouseleave', stopNote)
 		btn.addEventListener('touchend', stopNote)
@@ -855,10 +902,18 @@ let songTimerHandles = []
 function stopSong() {
 	songTimerHandles.forEach((h) => clearTimeout(h))
 	songTimerHandles = []
-	try { Tone.Transport.stop() } catch {}
+	try {
+		Tone.Transport.stop()
+		Tone.Transport.cancel()
+	} catch {}
 }
 async function playSongFromEditor() {
 	const bpm = parseInt(document.querySelector('#songBpm')?.value || '90', 10)
+	const beatsPerBar = parseInt(
+		document.querySelector('#timeBeats')?.value || '4',
+		10
+	)
+	const metOn = document.querySelector('#metronome')?.checked
 	const parsed = parseBarsDetailed()
 	const items = parsed.items
 	if (!items.some((x) => x.type === 'bar' && x.chords.length)) {
@@ -869,23 +924,65 @@ async function playSongFromEditor() {
 		let m
 		while ((m = re.exec(text))) chords.push(m[1])
 		if (!chords.length) return alert('No chords found in the editor.')
-		await ensurePiano(); try { await Tone.start?.() } catch {}
+		await ensurePiano()
+		try {
+			await Tone.start?.()
+		} catch {}
 		const beatMs = 60000 / bpm
 		stopSong()
+		if (metOn && Tone?.Transport) {
+			try {
+				Tone.Transport.bpm.value = bpm
+				Tone.Transport.cancel()
+				let beatIdx = 0
+				Tone.Transport.scheduleRepeat((time) => {
+					const down = beatIdx % beatsPerBar === 0
+					try {
+						if (down) metroHigh?.triggerAttackRelease('C5', '8n', time)
+						else metroLow?.triggerAttackRelease('C4', '8n', time)
+					} catch {}
+					beatIdx = (beatIdx + 1) % (beatsPerBar * 1000)
+				}, '4n')
+				Tone.Transport.start()
+			} catch {}
+		}
 		chords.forEach((sym, i) => {
 			const h = setTimeout(() => audition(sym), i * 4 * beatMs)
 			songTimerHandles.push(h)
 		})
 		return
 	}
-	await ensurePiano(); try { await Tone.start?.() } catch {}
+	await ensurePiano()
+	try {
+		await Tone.start?.()
+	} catch {}
 	const beatMs = 60000 / bpm
 	stopSong()
+	if (metOn && Tone?.Transport) {
+		try {
+			Tone.Transport.bpm.value = bpm
+			Tone.Transport.cancel()
+			let beatIdx = 0
+			Tone.Transport.scheduleRepeat((time) => {
+				const down = beatIdx % beatsPerBar === 0
+				try {
+					if (down) metroHigh?.triggerAttackRelease('C5', '8n', time)
+					else metroLow?.triggerAttackRelease('C4', '8n', time)
+				} catch {}
+				beatIdx = (beatIdx + 1) % (beatsPerBar * 1000)
+			}, '4n')
+			Tone.Transport.start()
+		} catch {}
+	}
 	let t = 0
 	for (const it of items) {
 		if (it.type !== 'bar') continue
-		if (!it.chords.length) { t += parsed.beatsPerBar * beatMs; continue }
-		const total = it.chords.reduce((s, c) => s + (c.beats || 0), 0) || parsed.beatsPerBar
+		if (!it.chords.length) {
+			t += parsed.beatsPerBar * beatMs
+			continue
+		}
+		const total =
+			it.chords.reduce((s, c) => s + (c.beats || 0), 0) || parsed.beatsPerBar
 		const scale = (parsed.beatsPerBar * beatMs) / total
 		for (const c of it.chords) {
 			const dur = (c.beats || 1) * scale
@@ -902,10 +999,16 @@ async function renderTakes() {
 	if (!list || !songId) return
 	list.innerHTML = ''
 	try {
-		const r = await fetch(`/.netlify/functions/songcraft?action=listAudio&songId=${encodeURIComponent(songId)}`)
+		const r = await fetch(
+			`/.netlify/functions/songcraft?action=listAudio&songId=${encodeURIComponent(
+				songId
+			)}`
+		)
 		if (!r.ok) return
 		const j = await r.json()
-		const items = Array.isArray(j.items) ? j.items.sort((a,b)=> (a.name>b.name?-1:1)) : []
+		const items = Array.isArray(j.items)
+			? j.items.sort((a, b) => (a.name > b.name ? -1 : 1))
+			: []
 		if (!items.length) {
 			const li = document.createElement('li')
 			li.style.opacity = '.8'
@@ -932,7 +1035,11 @@ async function renderTakes() {
 					const res = await fetch('/.netlify/functions/songcraft', {
 						method: 'POST',
 						headers: { 'content-type': 'application/json' },
-						body: JSON.stringify({ action: 'deleteAudio', song_id: songId, path: it.path }),
+						body: JSON.stringify({
+							action: 'deleteAudio',
+							song_id: songId,
+							path: it.path,
+						}),
 					})
 					if (res.ok) renderTakes()
 					else alert('Delete failed')
