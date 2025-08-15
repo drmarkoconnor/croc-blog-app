@@ -42,7 +42,10 @@ layout: layout.njk
 				<audio id="recAudio" controls style="display:none"></audio>
 				<button class="btn btn-small" id="btnUpload" style="display:none">Save to song</button>
 			</div>
-			<ul id="audioList" style="margin-top:.5rem"></ul>
+			<div style="margin-top:.5rem">
+				<strong>Takes</strong>
+				<ul id="audioList" style="margin-top:.35rem;list-style:none;padding:0;display:grid;gap:.35rem"></ul>
+			</div>
 		</details>
 	</div>
 	<div class="pane chord-pane">
@@ -63,6 +66,7 @@ layout: layout.njk
 			<label style="display:flex;gap:.5rem;align-items:center">Instrument
 				<select id="voiceSelect" style="appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:#fff;padding:.45rem .5rem;border-radius:8px">
 					<option value="pad">Soft Pad</option>
+					<option value="piano">Piano (Samples)</option>
 					<option value="guitar">Guitar Strum</option>
 				</select>
 			</label>

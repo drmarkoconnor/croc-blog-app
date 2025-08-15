@@ -175,7 +175,7 @@ async function renderPalette() {
 }
 
 // Audio audition via Tone.js (optional)
-let Tone, synth, poly, TonalMod, reverb, eq, drum, guitar
+let Tone, synth, poly, TonalMod, reverb, eq, drum, guitar, piano
 const PREF_KEY = 'songwriter_prefs'
 function getPrefs() {
 	try {
@@ -216,7 +216,7 @@ async function ensureTone() {
 		}
 		// Guitar-like plucked synth for strumming
 		guitar = new Tone.PluckSynth({ attackNoise: 1, dampening: 3600, resonance: 0.9 }).connect(reverb)
-		// Optional: lazy-load tonal for chord parsing
+	// Optional: lazy-load tonal for chord parsing
 		TonalMod = await import('https://esm.sh/@tonaljs/tonal@5')
 	} catch (e) {
 		console.warn('Tone load failed; fallback silent', e)
@@ -310,6 +310,8 @@ async function audition(sym) {
 		try {
 			if (mode === 'guitar') {
 				await strum(notes)
+			} else if (mode === 'piano') {
+				await playPiano(notes)
 			} else if (poly) {
 				poly.triggerAttackRelease(notes, '1n')
 			}
@@ -341,6 +343,55 @@ async function strum(notes) {
 			}
 		} catch {}
 	}
+}
+
+// Piano: sample-based via Tone.Sampler
+async function ensurePiano() {
+	await ensureTone()
+	if (piano) return piano
+	try {
+		// Using free public piano samples (Yamaha Grand) from Tone.js CDN
+		// For a Steinway-like tone, these suffice for preview; can swap later
+		piano = new Tone.Sampler(
+			{
+				'A1': 'A1.mp3',
+				'C2': 'C2.mp3',
+				'D#2': 'Ds2.mp3',
+				'F#2': 'Fs2.mp3',
+				'A2': 'A2.mp3',
+				'C3': 'C3.mp3',
+				'D#3': 'Ds3.mp3',
+				'F#3': 'Fs3.mp3',
+				'A3': 'A3.mp3',
+				'C4': 'C4.mp3',
+				'D#4': 'Ds4.mp3',
+				'F#4': 'Fs4.mp3',
+				'A4': 'A4.mp3',
+				'C5': 'C5.mp3',
+				'D#5': 'Ds5.mp3',
+				'F#5': 'Fs5.mp3',
+				'A5': 'A5.mp3',
+			},
+			{
+				baseUrl: 'https://tonejs.github.io/audio/salamander/',
+				release: 2,
+			}
+		).connect(reverb)
+		await Tone.loaded()
+	} catch (e) {
+		console.warn('Piano load failed', e)
+	}
+	return piano
+}
+
+async function playPiano(notes) {
+	await ensurePiano()
+	if (!piano) return
+	const now = Tone.now()
+	const dur = 1.5
+	try {
+		notes.forEach((n, i) => piano.triggerAttackRelease(n, dur, now + i * 0.01))
+	} catch {}
 }
 
 // Recording mini-panel
@@ -404,7 +455,28 @@ function fmt(t) {
 	if (el)
 		el.addEventListener('click', async () => {
 			if (!songId) return alert('Type something first to create the song.')
-			alert('Upload coming soon (server function wiring needed).')
+			if (!chunks?.length) return alert('No recording to upload.')
+			try {
+				await ensureTone(); // no-op if already
+				const blob = new Blob(chunks, { type: 'audio/webm' })
+				const res = await fetch(
+					`/.netlify/functions/songcraft?action=uploadAudio&songId=${encodeURIComponent(songId)}`,
+					{
+						method: 'POST',
+						headers: { 'content-type': 'audio/webm' },
+						body: await blob.arrayBuffer(),
+					}
+				)
+				if (!res.ok) {
+					const t = await res.text().catch(() => '')
+					return alert('Upload failed: ' + t)
+				}
+				await res.json()
+				renderTakes()
+				alert('Uploaded')
+			} catch (e) {
+				alert('Upload failed')
+			}
 		})
 }
 
@@ -437,6 +509,7 @@ async function init() {
 					$('#songBpm').value = row.bpm || 90
 					$('#editor').value = row.body_chordpro || ''
 					ensureDeleteButton()
+					renderTakes()
 				}
 			}
 		} catch {}
@@ -464,6 +537,7 @@ async function init() {
 	})
 	$('#btnAudition').addEventListener('click', async () => {
 		await ensureTone();
+		try { await Tone.start?.() } catch {}
 		try { await Tone.start?.() } catch {}
 		const val = $('#editor').value
 		const pos = $('#editor').selectionStart || 0
@@ -553,6 +627,7 @@ async function init() {
 				}),
 			})
 			ensureDeleteButton()
+			renderTakes()
 			if (res.ok) alert('Version saved')
 			else alert('Failed to save version')
 		} catch {
@@ -607,6 +682,7 @@ async function renderRecent() {
 					if (row.body_chordpro) $('#editor').value = row.body_chordpro
 					renderPalette()
 					ensureDeleteButton()
+					renderTakes()
 				} catch {}
 			})
 			ul.appendChild(li)
@@ -682,5 +758,56 @@ if (document.readyState === 'loading') {
 	document.addEventListener('DOMContentLoaded', wireSoundPanel)
 } else {
 	wireSoundPanel()
+}
+
+// Takes rendering
+async function renderTakes() {
+	const list = document.querySelector('#audioList')
+	if (!list || !songId) return
+	list.innerHTML = ''
+	try {
+		const r = await fetch(`/.netlify/functions/songcraft?action=listAudio&songId=${encodeURIComponent(songId)}`)
+		if (!r.ok) return
+		const j = await r.json()
+		const items = Array.isArray(j.items) ? j.items.sort((a,b)=> (a.name>b.name?-1:1)) : []
+		if (!items.length) {
+			const li = document.createElement('li')
+			li.style.opacity = '.8'
+			li.textContent = 'No takes yet.'
+			list.appendChild(li)
+			return
+		}
+		items.forEach((it) => {
+			const li = document.createElement('li')
+			li.style.display = 'flex'
+			li.style.alignItems = 'center'
+			li.style.gap = '.5rem'
+			const a = document.createElement('a')
+			a.href = it.url
+			a.textContent = it.name
+			a.target = '_blank'
+			const del = document.createElement('button')
+			del.className = 'btn btn-small'
+			del.style.background = '#5a2233'
+			del.textContent = 'Delete'
+			del.addEventListener('click', async () => {
+				if (!confirm('Delete this take?')) return
+				try {
+					const res = await fetch('/.netlify/functions/songcraft', {
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({ action: 'deleteAudio', song_id: songId, path: it.path }),
+					})
+					if (res.ok) renderTakes()
+					else alert('Delete failed')
+				} catch {
+					alert('Delete failed')
+				}
+			})
+			li.appendChild(a)
+			li.appendChild(del)
+			list.appendChild(li)
+		})
+	} catch {}
 }
 

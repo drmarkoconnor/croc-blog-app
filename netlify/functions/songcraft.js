@@ -61,7 +61,10 @@ exports.handler = async (event) => {
 			return { statusCode: 200, headers: cors(), body: '' }
 		}
 
-		const body = event.body ? JSON.parse(event.body) : {}
+		const isJson =
+			(event.headers?.['content-type'] || '').includes('application/json') ||
+			(event.headers?.['Content-Type'] || '').includes('application/json')
+		const body = isJson && event.body ? JSON.parse(event.body) : {}
 		const action =
 			body.action || event.queryStringParameters?.action || 'upsert'
 
@@ -163,6 +166,153 @@ exports.handler = async (event) => {
 				)}&owner_id=eq.${encodeURIComponent(ownerId)}`,
 				{ method: 'DELETE' }
 			)
+			return json({ ok: true })
+		}
+
+		// Upload recorded audio blob to Supabase Storage
+		if (method === 'POST' && action === 'uploadAudio') {
+			const songId = event.queryStringParameters?.songId || body.song_id
+			if (!songId) return { statusCode: 400, body: 'Missing songId' }
+			// Verify ownership of song
+			const g = await sb(
+				`/rest/v1/songs?id=eq.${encodeURIComponent(
+					songId
+				)}&owner_id=eq.${encodeURIComponent(ownerId)}&select=id&limit=1`
+			)
+			const rows = await g.json()
+			if (!rows?.length) return { statusCode: 403, body: 'Not allowed' }
+
+			const contentType =
+				event.headers?.['content-type'] || event.headers?.['Content-Type'] ||
+				'application/octet-stream'
+			const buf = event.body
+				? event.isBase64Encoded
+					? Buffer.from(event.body, 'base64')
+					: Buffer.from(event.body)
+				: Buffer.from('')
+
+			const bucket = process.env.SONGCRAFT_AUDIO_BUCKET || 'songcraft-audio'
+			// Try to create bucket (ignore if exists)
+			try {
+				await fetch(SUPABASE_URL.replace(/\/$/, '') + '/storage/v1/bucket', {
+					method: 'POST',
+					headers: {
+						apikey: SERVICE_KEY,
+						Authorization: `Bearer ${SERVICE_KEY}`,
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ name: bucket, public: true }),
+				})
+			} catch (e) {}
+
+			const fileName = `${Date.now()}.webm`
+			const objectPath = `song/${ownerId}/${songId}/${fileName}`
+			const up = await fetch(
+				SUPABASE_URL.replace(/\/$/, '') +
+					`/storage/v1/object/${encodeURIComponent(bucket)}/${encodeURIComponent(
+						objectPath
+					)}`,
+				{
+					method: 'POST',
+					headers: {
+						apikey: SERVICE_KEY,
+						Authorization: `Bearer ${SERVICE_KEY}`,
+						'Content-Type': contentType,
+						'x-upsert': 'true',
+					},
+					body: buf,
+				}
+			)
+			if (!up.ok) {
+				const t = await up.text().catch(() => '')
+				return { statusCode: 500, body: `Upload failed: ${up.status} ${t}` }
+			}
+
+			const publicUrl =
+				SUPABASE_URL.replace(/\/$/, '') +
+				`/storage/v1/object/public/${encodeURIComponent(
+					bucket
+				)}/${objectPath}`
+			return json({ ok: true, url: publicUrl, path: objectPath })
+		}
+
+		// List uploaded audio takes for a song from Supabase Storage
+		if (method === 'GET' && action === 'listAudio') {
+			const songId = event.queryStringParameters?.songId
+			if (!songId) return { statusCode: 400, body: 'Missing songId' }
+			// Verify ownership
+			const g = await sb(
+				`/rest/v1/songs?id=eq.${encodeURIComponent(
+					songId
+				)}&owner_id=eq.${encodeURIComponent(ownerId)}&select=id&limit=1`
+			)
+			const rows = await g.json()
+			if (!rows?.length) return { statusCode: 403, body: 'Not allowed' }
+			const bucket = process.env.SONGCRAFT_AUDIO_BUCKET || 'songcraft-audio'
+			const prefix = `song/${ownerId}/${songId}/`
+			const listRes = await fetch(
+				SUPABASE_URL.replace(/\/$/, '') +
+					`/storage/v1/object/list/${encodeURIComponent(bucket)}`,
+				{
+					method: 'POST',
+					headers: {
+						apikey: SERVICE_KEY,
+						Authorization: `Bearer ${SERVICE_KEY}`,
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ prefix, limit: 100, search: '' }),
+				}
+			)
+			if (!listRes.ok) {
+				const t = await listRes.text().catch(() => '')
+				return { statusCode: 500, body: `List failed: ${listRes.status} ${t}` }
+			}
+			const items = (await listRes.json()) || []
+			const out = items
+				.filter((it) => it && it.name && !it.name.endsWith('/'))
+				.map((it) => {
+					const path = prefix + it.name
+					const url =
+						SUPABASE_URL.replace(/\/$/, '') +
+						`/storage/v1/object/public/${encodeURIComponent(bucket)}/${path}`
+					return {
+						path,
+						url,
+						name: it.name,
+						size: it.metadata?.size ?? it.size ?? null,
+						created_at: it.created_at || null,
+					}
+				})
+			return json({ items: out })
+		}
+
+		// Delete a specific uploaded audio take
+		if (method === 'POST' && action === 'deleteAudio') {
+			const { song_id: songId, path } = body
+			if (!songId || !path) return { statusCode: 400, body: 'Missing songId or path' }
+			// Verify ownership and path scope
+			const prefix = `song/${ownerId}/${songId}/`
+			if (!path.startsWith(prefix)) return { statusCode: 403, body: 'Not allowed' }
+			const g = await sb(
+				`/rest/v1/songs?id=eq.${encodeURIComponent(
+					songId
+				)}&owner_id=eq.${encodeURIComponent(ownerId)}&select=id&limit=1`
+			)
+			const rows = await g.json()
+			if (!rows?.length) return { statusCode: 403, body: 'Not allowed' }
+			const bucket = process.env.SONGCRAFT_AUDIO_BUCKET || 'songcraft-audio'
+			const del = await fetch(
+				SUPABASE_URL.replace(/\/$/, '') +
+					`/storage/v1/object/${encodeURIComponent(bucket)}/${path}`,
+				{
+					method: 'DELETE',
+					headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+				}
+			)
+			if (!del.ok) {
+				const t = await del.text().catch(() => '')
+				return { statusCode: 500, body: `Delete failed: ${del.status} ${t}` }
+			}
 			return json({ ok: true })
 		}
 
