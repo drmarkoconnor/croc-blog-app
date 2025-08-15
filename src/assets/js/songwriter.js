@@ -178,12 +178,24 @@ async function renderPalette() {
 }
 
 // Audio audition via Tone.js (optional)
-let Tone, synth
+let Tone, synth, poly, TonalMod
 async function ensureTone() {
 	if (Tone) return
 	try {
 		Tone = await import('https://esm.sh/tone@14.8.49')
-		synth = new Tone.Synth().toDestination()
+		// Soft, musical poly synth
+		poly = new Tone.PolySynth(Tone.Synth, {
+			maxPolyphony: 6,
+			oscillator: { type: 'triangle' },
+			envelope: { attack: 0.02, decay: 0.2, sustain: 0.7, release: 1.2 },
+		}).toDestination()
+		// Keep mono synth as fallback for single tones
+		synth = new Tone.Synth({
+			oscillator: { type: 'sine' },
+			envelope: { attack: 0.01, release: 0.8 },
+		}).toDestination()
+		// Optional: lazy-load tonal for chord parsing
+		TonalMod = await import('https://esm.sh/@tonaljs/tonal@5')
 	} catch (e) {
 		console.warn('Tone load failed; fallback silent', e)
 	}
@@ -195,13 +207,85 @@ function midiOf(note) {
 	const base = 60 // C4
 	return base + (pc - pcOf('C'))
 }
+function normalizeQuality(rest) {
+	const r = (rest || '').trim()
+	if (!r) return ''
+	if (/^Maj7$/i.test(r)) return 'maj7'
+	if (/^M7$/i.test(r)) return 'maj7'
+	if (/^m7b5$/i.test(r) || r === 'ø') return 'm7b5'
+	if (/^dim7$/i.test(r)) return 'dim7'
+	if (/^dim$/i.test(r) || r === 'o') return 'dim'
+	if (/^m7$/i.test(r)) return 'm7'
+	if (/^m(?!aj)/i.test(r)) return 'm'
+	if (/^7$/.test(r)) return '7'
+	return r
+}
+function chordNotesFromSymbol(sym) {
+	// Skip non-note placeholders (e.g., bIII)
+	if (!/^[A-G]/.test(sym)) return null
+	const m = sym.match(/^([A-G](?:#|b)?)(.*)$/)
+	if (!m) return null
+	const root = m[1]
+	const qual = normalizeQuality(m[2] || '')
+
+	// Use tonal if available
+	if (TonalMod?.Chord?.get) {
+		const name = root + qual
+		const got = TonalMod.Chord.get(name)
+		if (got?.notes?.length) return got.notes
+	}
+
+	// Fallback: basic sets
+	const q = qual.toLowerCase()
+	const basePc = pcOf(root)
+	const intervals =
+		q === 'm7b5'
+			? [0, 3, 6, 10]
+			: q === 'dim7'
+			? [0, 3, 6, 9]
+			: q === 'dim'
+			? [0, 3, 6]
+			: q === 'maj7'
+			? [0, 4, 7, 11]
+			: q === 'm7'
+			? [0, 3, 7, 10]
+			: q === '7'
+			? [0, 4, 7, 10]
+			: q === 'm'
+			? [0, 3, 7]
+			: [0, 4, 7]
+	const pref = preferAccidental(root)
+	return intervals.map((i) => nameOf(basePc + i, pref))
+}
+function withOctaves(notes, baseOct = 3) {
+	// Spread across two octaves for a fuller voicing
+	const out = []
+	for (let i = 0; i < notes.length; i++) {
+		const oct = baseOct + (i > 1 ? 1 : 0)
+		out.push(`${notes[i]}${oct}`)
+	}
+	return out
+}
 async function audition(sym) {
 	await ensureTone()
-	if (!synth) return
-	const n = midiOf(sym)
-	try {
-		synth.triggerAttackRelease(Tone.Frequency(n, 'midi'), '1n')
-	} catch {}
+	if (!Tone) return
+	const chordPc =
+		chordNotesFromSymbol(sym) ||
+		chordNotesFromSymbol($('#songKey')?.value || 'C')
+	if (chordPc?.length && poly) {
+		const notes = withOctaves(chordPc)
+		try {
+			poly.triggerAttackRelease(notes, '1n')
+			return
+		} catch {}
+	}
+	// Fallback single tone if poly not available
+	if (synth) {
+		const n = midiOf(sym)
+		try {
+			synth.triggerAttackRelease(Tone.Frequency(n, 'midi'), '1n')
+		} catch {}
+	}
 }
 
 // Recording mini-panel
