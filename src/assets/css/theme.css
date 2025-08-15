@@ -231,6 +231,20 @@ main {
 	padding: 1.2rem;
 	border: 1px solid rgba(255, 255, 255, 0.18);
 }
+.lyric-input {
+	background: #f7f5ff !important; /* pale background for legibility */
+	color: #1a1535 !important;
+	border: 1px solid #d9d4f0 !important;
+	box-shadow: inset 0 1px 0 #ffffff;
+}
+.palette-grid .btn.btn-small {
+	background: rgba(255, 255, 255, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	color: #fff;
+}
+.palette-grid .btn.btn-small:hover {
+	background: #2a334a;
+}
 .card h3 {
 	margin-top: 0;
 	font-size: clamp(1.25rem, 2.2vw, 1.6rem);
@@ -392,6 +406,28 @@ main {
 
 /* Mobile-first fluid type bumps for small iPhones only */
 @media (max-width: 430px) {
+	/* Lyric Book: stack panes and emphasize editor */
+	.songwriter {
+		display: grid !important;
+		grid-template-columns: 1fr !important;
+	}
+	.lyric-input {
+		min-height: 62vh !important;
+		font-size: 1.05rem !important;
+		padding: 1rem !important;
+		border-radius: 16px !important;
+	}
+	.chord-pane {
+		order: 2;
+	}
+	.palette-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+	}
+	.palette-grid .btn.btn-small {
+		padding: 0.8rem 0.6rem;
+		font-size: 1rem;
+		border-radius: 12px;
+	}
 	/* On small iPhones, let the hub grid participate in layout and allow scrolling */
 	.hero {
 		min-height: auto;

@@ -175,22 +175,27 @@ async function renderPalette() {
 }
 
 // Audio audition via Tone.js (optional)
-let Tone, synth, poly, TonalMod
+let Tone, synth, poly, TonalMod, reverb, eq
 async function ensureTone() {
 	if (Tone) return
 	try {
 		Tone = await import('https://esm.sh/tone@14.8.49')
-		// Soft, musical poly synth
+		// Mastering: gentle EQ and lush reverb for pleasant tone
+		eq = new Tone.EQ3({ low: -2, mid: 0, high: 1 }).toDestination()
+		reverb = new Tone.Reverb({ decay: 2.8, wet: 0.18, preDelay: 0.02 })
+		reverb.connect(eq)
+		// Soft, musical poly synth with detune and subtle chorus-like feel
 		poly = new Tone.PolySynth(Tone.Synth, {
 			maxPolyphony: 6,
-			oscillator: { type: 'triangle' },
-			envelope: { attack: 0.02, decay: 0.2, sustain: 0.7, release: 1.2 },
-		}).toDestination()
+			oscillator: { type: 'sawtooth' },
+			envelope: { attack: 0.02, decay: 0.25, sustain: 0.6, release: 1.6 },
+			portamento: 0.0,
+		}).connect(reverb)
 		// Keep mono synth as fallback for single tones
 		synth = new Tone.Synth({
-			oscillator: { type: 'sine' },
-			envelope: { attack: 0.01, release: 0.8 },
-		}).toDestination()
+			oscillator: { type: 'triangle' },
+			envelope: { attack: 0.02, release: 0.9 },
+		}).connect(reverb)
 		// Optional: lazy-load tonal for chord parsing
 		TonalMod = await import('https://esm.sh/@tonaljs/tonal@5')
 	} catch (e) {
@@ -255,11 +260,21 @@ function chordNotesFromSymbol(sym) {
 	return intervals.map((i) => nameOf(basePc + i, pref))
 }
 function withOctaves(notes, baseOct = 3) {
-	// Spread across two octaves for a fuller voicing
+	// Use pleasant close voicings; avoid stacked semitones across octaves
+	const uniq = []
+	for (const n of notes) if (!uniq.includes(n)) uniq.push(n)
 	const out = []
-	for (let i = 0; i < notes.length; i++) {
-		const oct = baseOct + (i > 1 ? 1 : 0)
-		out.push(`${notes[i]}${oct}`)
+	for (let i = 0; i < uniq.length; i++) {
+		const oct = baseOct + (i > 2 ? 1 : 0)
+		out.push(`${uniq[i]}${oct}`)
+	}
+	// If major/minor triad, optionally add 9 for sweetness
+	if (uniq.length === 3) {
+		try {
+			const root = uniq[0]
+			const pref = preferAccidental(root)
+			out.push(`${nameOf(pcOf(root) + 14, pref)}${baseOct + 1}`) // add 9 an octave up
+		} catch {}
 	}
 	return out
 }

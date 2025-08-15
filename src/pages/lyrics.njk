@@ -32,7 +32,7 @@ layout: layout.njk
 <section class="songwriter" style="display:grid;grid-template-columns:minmax(300px,1fr) minmax(260px,380px);gap:1rem;align-items:start">
 	<div class="pane">
 		<h3 style="margin:.2rem 0 .6rem">Lyric editor</h3>
-		<textarea id="editor" spellcheck="false" style="width:100%;min-height:58vh;font: 15px/1.5 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:#fff;border-radius:12px;padding:.8rem"></textarea>
+		<textarea id="editor" class="lyric-input" spellcheck="false" style="width:100%;min-height:58vh;font: 15px/1.5 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;appearance:none;border:1px solid #d9d4f0;background:#f7f5ff;color:#1a1535;border-radius:12px;padding:.8rem"></textarea>
 		<details style="margin-top:.6rem">
 			<summary>Recording mini-panel</summary>
 			<div id="recPanel" style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
@@ -45,14 +45,14 @@ layout: layout.njk
 			<ul id="audioList" style="margin-top:.5rem"></ul>
 		</details>
 	</div>
-	<div class="pane">
+	<div class="pane chord-pane">
 		<h3 style="margin:.2rem 0 .6rem">Chord palette</h3>
-		<div id="palette" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
+		<div id="palette" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
 		<h4 style="margin-top:1rem">Sevenths</h4>
-		<div id="palette7" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
+		<div id="palette7" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem"></div>
 		<details style="margin-top:.6rem">
 			<summary>Borrowed + secondary</summary>
-			<div id="borrowed" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem;margin-top:.5rem"></div>
+			<div id="borrowed" class="palette-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem;margin-top:.5rem"></div>
 		</details>
 		<div style="margin-top:1rem">
 			<button class="btn btn-small" id="btnAudition">Play chord</button>
