@@ -245,6 +245,21 @@ main {
 .palette-grid .btn.btn-small:hover {
 	background: #2a334a;
 }
+.sound-panel .pad {
+	appearance: none;
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	background: rgba(255, 255, 255, 0.08);
+	color: #fff;
+	padding: 0.8rem 0.6rem;
+	border-radius: 12px;
+	font-weight: 800;
+	cursor: pointer;
+}
+.sound-panel .pad:hover { background: rgba(255, 255, 255, 0.14); }
+.sound-panel .pad:active {
+	background: #1f3b0a;
+	transform: translateY(1px) scale(0.99);
+}
 .card h3 {
 	margin-top: 0;
 	font-size: clamp(1.25rem, 2.2vw, 1.6rem);
@@ -427,6 +442,11 @@ main {
 		padding: 0.8rem 0.6rem;
 		font-size: 1rem;
 		border-radius: 12px;
+	}
+	.sound-panel .pad {
+		padding: 1rem 0.8rem;
+		font-size: 1.05rem;
+		border-radius: 14px;
 	}
 	/* On small iPhones, let the hub grid participate in layout and allow scrolling */
 	.hero {

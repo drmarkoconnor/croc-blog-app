@@ -141,7 +141,7 @@ async function autosave() {
 			})
 			if (res.ok) {
 				const j = await res.json()
-				if (!songId && j?.id) songId = j.id
+				if (!songId && j?.id) { songId = j.id; ensureDeleteButton() }
 			}
 		} catch (e) {
 			// ignore; remain local-only if offline
@@ -175,7 +175,19 @@ async function renderPalette() {
 }
 
 // Audio audition via Tone.js (optional)
-let Tone, synth, poly, TonalMod, reverb, eq
+let Tone, synth, poly, TonalMod, reverb, eq, drum, guitar
+const PREF_KEY = 'songwriter_prefs'
+function getPrefs() {
+	try {
+		return JSON.parse(localStorage.getItem(PREF_KEY) || '{}')
+	} catch {
+		return {}
+	}
+}
+function setPrefs(p) {
+	const cur = getPrefs()
+	localStorage.setItem(PREF_KEY, JSON.stringify({ ...cur, ...p }))
+}
 async function ensureTone() {
 	if (Tone) return
 	try {
@@ -196,6 +208,14 @@ async function ensureTone() {
 			oscillator: { type: 'triangle' },
 			envelope: { attack: 0.02, release: 0.9 },
 		}).connect(reverb)
+		// Simple drum voices
+		drum = {
+			kick: new Tone.MembraneSynth({ pitchDecay: 0.008, octaves: 4, envelope: { attack: 0.001, decay: 0.5, sustain: 0 } }).connect(eq),
+			snare: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).connect(eq),
+			hat: new Tone.MetalSynth({ frequency: 400, envelope: { attack: 0.001, decay: 0.1, release: 0.01 }, harmonicity: 5.1, modulationIndex: 32 }).connect(eq),
+		}
+		// Guitar-like plucked synth for strumming
+		guitar = new Tone.PluckSynth({ attackNoise: 1, dampening: 3600, resonance: 0.9 }).connect(reverb)
 		// Optional: lazy-load tonal for chord parsing
 		TonalMod = await import('https://esm.sh/@tonaljs/tonal@5')
 	} catch (e) {
@@ -284,10 +304,15 @@ async function audition(sym) {
 	const chordPc =
 		chordNotesFromSymbol(sym) ||
 		chordNotesFromSymbol($('#songKey')?.value || 'C')
-	if (chordPc?.length && poly) {
+	const mode = getPrefs().voice || 'pad'
+	if (chordPc?.length) {
 		const notes = withOctaves(chordPc)
 		try {
-			poly.triggerAttackRelease(notes, '1n')
+			if (mode === 'guitar') {
+				await strum(notes)
+			} else if (poly) {
+				poly.triggerAttackRelease(notes, '1n')
+			}
 			return
 		} catch {}
 	}
@@ -296,6 +321,24 @@ async function audition(sym) {
 		const n = midiOf(sym)
 		try {
 			synth.triggerAttackRelease(Tone.Frequency(n, 'midi'), '1n')
+		} catch {}
+	}
+}
+
+// Guitar strummer: gentle arpeggio
+async function strum(notes) {
+	await ensureTone()
+	if (!Tone) return
+	const now = Tone.now()
+	const gap = 0.06
+	for (let i = 0; i < notes.length; i++) {
+		const t = now + i * gap
+		try {
+			if (guitar?.triggerAttackRelease) {
+				guitar.triggerAttackRelease(notes[i], 0.6, t, 0.9)
+			} else if (synth?.triggerAttackRelease) {
+				synth.triggerAttackRelease(notes[i], 0.6, t, 0.85)
+			}
 		} catch {}
 	}
 }
@@ -393,6 +436,7 @@ async function init() {
 					$('#songKey').value = row.key || 'C'
 					$('#songBpm').value = row.bpm || 90
 					$('#editor').value = row.body_chordpro || ''
+					ensureDeleteButton()
 				}
 			}
 		} catch {}
@@ -418,7 +462,9 @@ async function init() {
 		$('#editor').value = transposeChordPro($('#editor').value, 1, pref)
 		autosave()
 	})
-	$('#btnAudition').addEventListener('click', () => {
+	$('#btnAudition').addEventListener('click', async () => {
+		await ensureTone();
+		try { await Tone.start?.() } catch {}
 		const val = $('#editor').value
 		const pos = $('#editor').selectionStart || 0
 		const upto = val.slice(0, pos)
@@ -506,42 +552,7 @@ async function init() {
 					body_chordpro: $('#editor').value,
 				}),
 			})
-
-			// Add delete when a song is loaded
-			if (!$('#btnDelete')) {
-				const btn = document.createElement('button')
-				btn.id = 'btnDelete'
-				btn.className = 'btn btn-small'
-				btn.style.background = '#5a2233'
-				btn.textContent = 'Delete'
-				// place next to Export button
-				const controls =
-					document.querySelector('#importFile')?.parentElement?.parentElement
-				if (controls) controls.appendChild(btn)
-				btn.addEventListener('click', async () => {
-					if (!songId) return alert('No song selected')
-					if (!confirm('Delete this song? This cannot be undone.')) return
-					try {
-						const res = await fetch('/.netlify/functions/songcraft', {
-							method: 'POST',
-							headers: { 'content-type': 'application/json' },
-							body: JSON.stringify({ action: 'delete', id: songId }),
-						})
-						if (!res.ok) return alert('Delete failed')
-						// Reset UI
-						songId = null
-						$('#songTitle').value = ''
-						$('#songKey').value = 'C'
-						$('#songBpm').value = 90
-						$('#editor').value = ''
-						renderPalette()
-						renderRecent()
-						alert('Deleted')
-					} catch {
-						alert('Delete failed')
-					}
-				})
-			}
+			ensureDeleteButton()
 			if (res.ok) alert('Version saved')
 			else alert('Failed to save version')
 		} catch {
@@ -595,10 +606,81 @@ async function renderRecent() {
 					$('#songBpm').value = row.bpm || s.bpm || 90
 					if (row.body_chordpro) $('#editor').value = row.body_chordpro
 					renderPalette()
+					ensureDeleteButton()
 				} catch {}
 			})
 			ul.appendChild(li)
 		}
 	} catch {}
+}
+
+// Ensure Delete button exists when a song is present
+function ensureDeleteButton() {
+	if (!songId) return
+	if (document.querySelector('#btnDelete')) return
+	const btn = document.createElement('button')
+	btn.id = 'btnDelete'
+	btn.className = 'btn btn-small'
+	btn.style.background = '#5a2233'
+	btn.textContent = 'Delete'
+	const controls = document.querySelector('#importFile')?.parentElement?.parentElement
+	if (controls) controls.appendChild(btn)
+	btn.addEventListener('click', async () => {
+		if (!songId) return alert('No song selected')
+		if (!confirm('Delete this song? This cannot be undone.')) return
+		try {
+			const res = await fetch('/.netlify/functions/songcraft', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ action: 'delete', id: songId }),
+			})
+			if (!res.ok) return alert('Delete failed')
+			// Reset UI
+			songId = null
+			$('#songTitle').value = ''
+			$('#songKey').value = 'C'
+			$('#songBpm').value = 90
+			$('#editor').value = ''
+			renderPalette()
+			renderRecent()
+			const del = document.querySelector('#btnDelete')
+			del?.parentElement?.removeChild(del)
+			alert('Deleted')
+		} catch {
+			alert('Delete failed')
+		}
+	})
+}
+
+// Wire sound panel events and restore prefs
+function wireSoundPanel() {
+	const sel = document.querySelector('#voiceSelect')
+	if (sel) {
+		const prefs = getPrefs()
+		if (prefs.voice) sel.value = prefs.voice
+		sel.addEventListener('change', () => setPrefs({ voice: sel.value }))
+	}
+	const pads = document.querySelectorAll('.sound-panel .pad')
+	if (pads?.length) {
+		pads.forEach((p) =>
+			p.addEventListener('click', async () => {
+				await ensureTone()
+				try { await Tone.start?.() } catch {}
+				const which = p.dataset.pad
+				try {
+					if (which === 'kick') drum?.kick?.triggerAttackRelease('C1', '8n')
+					else if (which === 'snare') drum?.snare?.triggerAttackRelease('8n')
+					else if (which === 'hat') drum?.hat?.triggerAttackRelease('16n')
+				} catch {}
+			})
+		)
+	}
+}
+
+// Run sound panel wiring after DOMContentLoaded fallback
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', wireSoundPanel)
+} else {
+	wireSoundPanel()
 }
 

@@ -58,6 +58,21 @@ layout: layout.njk
 			<button class="btn btn-small" id="btnAudition">Play chord</button>
 		</div>
 		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
+		<h3 style="margin:.2rem 0 .6rem">Sound</h3>
+		<div class="sound-panel" style="display:grid;gap:.6rem">
+			<label style="display:flex;gap:.5rem;align-items:center">Instrument
+				<select id="voiceSelect" style="appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:#fff;padding:.45rem .5rem;border-radius:8px">
+					<option value="pad">Soft Pad</option>
+					<option value="guitar">Guitar Strum</option>
+				</select>
+			</label>
+			<div class="pad-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem">
+				<button class="pad" data-pad="kick">Kick</button>
+				<button class="pad" data-pad="snare">Snare</button>
+				<button class="pad" data-pad="hat">Hat</button>
+			</div>
+		</div>
+		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
 		<h4 style="margin:.2rem 0 .6rem">Recent songs</h4>
 		<ul id="recentSongs" style="list-style:none;padding:0;margin:0;display:grid;gap:.35rem"></ul>
 	</div>
