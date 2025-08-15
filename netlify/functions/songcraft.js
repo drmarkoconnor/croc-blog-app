@@ -1,11 +1,28 @@
-const { createClient } = require('@supabase/supabase-js')
 const crypto = require('crypto')
 
-function getClient() {
-	const url = process.env.SUPABASE_URL
-	const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-	if (!url || !key) throw new Error('Missing Supabase env')
-	return createClient(url, key)
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!SUPABASE_URL || !SERVICE_KEY)
+	throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+
+async function sb(path, opts = {}) {
+	const res = await fetch(SUPABASE_URL.replace(/\/$/, '') + path, {
+		...opts,
+		headers: {
+			apikey: SERVICE_KEY,
+			Authorization: `Bearer ${SERVICE_KEY}`,
+			'Content-Type': 'application/json',
+			...(opts.headers || {}),
+		},
+	})
+	if (!res.ok) {
+		let detail = ''
+		try {
+			detail = await res.text()
+		} catch {}
+		throw new Error(`Supabase ${res.status} ${detail}`)
+	}
+	return res
 }
 
 function uuidV5FromString(
@@ -32,7 +49,6 @@ function uuidV5FromString(
 
 exports.handler = async (event) => {
 	try {
-		const sb = getClient()
 		// Single-user mode: stable owner id
 		const ownerId =
 			process.env.SONGCRAFT_OWNER_ID ||
@@ -52,84 +68,101 @@ exports.handler = async (event) => {
 		if (method === 'POST' && action === 'upsert') {
 			const { id, title, key, bpm, body_chordpro } = body
 			if (id) {
-				const { data, error } = await sb
-					.from('songs')
-					.update({
-						title,
-						key,
-						bpm,
-						body_chordpro,
-						owner_id: ownerId,
-						updated_at: new Date().toISOString(),
-					})
-					.eq('id', id)
-					.eq('owner_id', ownerId)
-					.select('id')
-					.single()
-				if (error) throw error
-				return json({ id: data.id })
+				const r = await sb(
+					`/rest/v1/songs?id=eq.${encodeURIComponent(
+						id
+					)}&owner_id=eq.${encodeURIComponent(ownerId)}`,
+					{
+						method: 'PATCH',
+						headers: { Prefer: 'return=representation' },
+						body: JSON.stringify({
+							title,
+							key,
+							bpm,
+							body_chordpro,
+							owner_id: ownerId,
+							updated_at: new Date().toISOString(),
+						}),
+					}
+				)
+				const rows = await r.json()
+				return json({ id: rows?.[0]?.id || id })
 			} else {
-				const { data, error } = await sb
-					.from('songs')
-					.insert({ title, key, bpm, body_chordpro, owner_id: ownerId })
-					.select('id')
-					.single()
-				if (error) throw error
-				return json({ id: data.id })
+				const r = await sb('/rest/v1/songs', {
+					method: 'POST',
+					headers: { Prefer: 'return=representation' },
+					body: JSON.stringify([
+						{ title, key, bpm, body_chordpro, owner_id: ownerId },
+					]),
+				})
+				const row = (await r.json())?.[0]
+				return json({ id: row.id })
 			}
 		}
 
 		if (method === 'POST' && action === 'saveVersion') {
 			const { song_id, label, body_chordpro } = body
 			if (!song_id) return { statusCode: 400, body: 'Missing song_id' }
-			// Guard ownership by visitor
-			const { data: song, error: se } = await sb
-				.from('songs')
-				.select('id')
-				.eq('id', song_id)
-				.eq('owner_id', ownerId)
-				.single()
-			if (se) return { statusCode: 403, body: 'Not allowed' }
-			const { error } = await sb
-				.from('song_versions')
-				.insert({ song_id, label, body_chordpro })
-			if (error) throw error
+			// Guard ownership
+			const g = await sb(
+				`/rest/v1/songs?id=eq.${encodeURIComponent(
+					song_id
+				)}&owner_id=eq.${encodeURIComponent(ownerId)}&select=id&limit=1`
+			)
+			const rows = await g.json()
+			if (!rows?.length) return { statusCode: 403, body: 'Not allowed' }
+			await sb('/rest/v1/song_versions', {
+				method: 'POST',
+				headers: { Prefer: 'return=minimal' },
+				body: JSON.stringify([{ song_id, label, body_chordpro }]),
+			})
 			return json({ ok: true })
 		}
 
 		if (method === 'GET' && action === 'list') {
-			const { data, error } = await sb
-				.from('songs')
-				.select('id, title, key, bpm, updated_at')
-				.eq('owner_id', ownerId)
-				.order('updated_at', { ascending: false })
-			if (error) throw error
+			const q = new URL(SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/songs')
+			q.searchParams.set('select', 'id,title,key,bpm,updated_at')
+			q.searchParams.set('owner_id', `eq.${ownerId}`)
+			q.searchParams.set('order', 'updated_at.desc')
+			const r = await fetch(q, {
+				headers: {
+					apikey: SERVICE_KEY,
+					Authorization: `Bearer ${SERVICE_KEY}`,
+				},
+			})
+			if (!r.ok) throw new Error(`Supabase ${r.status}`)
+			const data = await r.json()
 			return json({ songs: data })
 		}
 
 		if (method === 'GET' && action === 'get') {
 			const id = event.queryStringParameters?.id
 			if (!id) return { statusCode: 400, body: 'Missing id' }
-			const { data, error } = await sb
-				.from('songs')
-				.select('id, title, key, bpm, body_chordpro, updated_at')
-				.eq('owner_id', ownerId)
-				.eq('id', id)
-				.single()
-			if (error) throw error
-			return json({ song: data })
+			const q = new URL(SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/songs')
+			q.searchParams.set('select', 'id,title,key,bpm,body_chordpro,updated_at')
+			q.searchParams.set('owner_id', `eq.${ownerId}`)
+			q.searchParams.set('id', `eq.${id}`)
+			q.searchParams.set('limit', '1')
+			const r = await fetch(q, {
+				headers: {
+					apikey: SERVICE_KEY,
+					Authorization: `Bearer ${SERVICE_KEY}`,
+				},
+			})
+			if (!r.ok) throw new Error(`Supabase ${r.status}`)
+			const rows = await r.json()
+			return json({ song: rows?.[0] })
 		}
 
 		if (method === 'POST' && action === 'delete') {
 			const { id } = body
 			if (!id) return { statusCode: 400, body: 'Missing id' }
-			// Guard ownership
-			const { error } = await sb
-				.from('songs')
-				.delete()
-				.eq('owner_id', ownerId)
-				.eq('id', id)
-			if (error) throw error
+			await sb(
+				`/rest/v1/songs?id=eq.${encodeURIComponent(
+					id
+				)}&owner_id=eq.${encodeURIComponent(ownerId)}`,
+				{ method: 'DELETE' }
+			)
 			return json({ ok: true })
 		}
 
