@@ -116,6 +116,16 @@ async function loadDraft(id) {
 let sb,
 	user,
 	songId = null
+// Anonymous visitor id for server function (sticky in localStorage)
+const VISITOR_ID_KEY = 'songcraft.visitorId'
+function getVisitorId() {
+	let id = localStorage.getItem(VISITOR_ID_KEY)
+	if (!id) {
+		id = (crypto?.randomUUID?.() || Math.random().toString(36).slice(2))
+		localStorage.setItem(VISITOR_ID_KEY, id)
+	}
+	return id
+}
 let autosaveTimer
 async function autosave() {
 	clearTimeout(autosaveTimer)
@@ -129,25 +139,21 @@ async function autosave() {
 		}
 		await saveDraft({ id: 'current', payload, ts: Date.now() })
 		try {
-			// If Supabase isn't configured or user not signed in, keep local only
-			if (!sb || !user) return
-			if (!songId) {
-				const { data, error } = await sb
-					.from('songs')
-					.insert(payload)
-					.select('id')
-					.single()
-				if (error) throw error
-				songId = data.id
-			} else {
-				const { error } = await sb
-					.from('songs')
-					.update(payload)
-					.eq('id', songId)
-				if (error) throw error
+			// Prefer server function so login isn't required
+			const res = await fetch('/.netlify/functions/songcraft', {
+				method: 'POST',
+				headers: {
+					'content-type': 'application/json',
+					'x-visitor-id': getVisitorId(),
+				},
+				body: JSON.stringify({ action: 'upsert', id: songId, ...payload }),
+			})
+			if (res.ok) {
+				const j = await res.json()
+				if (!songId && j?.id) songId = j.id
 			}
 		} catch (e) {
-			console.warn('autosave failed', e)
+			// ignore; remain local-only if offline
 		}
 	}, 800)
 }
@@ -511,20 +517,23 @@ async function init() {
 		e.target.value = ''
 	})
 	$('#btnSaveVersion')?.addEventListener('click', async () => {
-		if (!sb || !user) return alert('Sign in to save versions to the cloud.')
 		if (!songId) await autosave() // ensure song exists
 		if (!songId) return alert('Type something first to create the song.')
-		const label = prompt(
-			'Label for this version (optional):',
-			new Date().toLocaleString()
-		)
-		const { error } = await sb.from('song_versions').insert({
-			song_id: songId,
-			label,
-			body_chordpro: $('#editor').value,
-		})
-		if (error) alert('Failed to save version')
-		else alert('Version saved')
+		const label = prompt('Label for this version (optional):', new Date().toLocaleString())
+		try {
+			const res = await fetch('/.netlify/functions/songcraft', {
+				method: 'POST',
+				headers: {
+					'content-type': 'application/json',
+					'x-visitor-id': getVisitorId(),
+				},
+				body: JSON.stringify({ action: 'saveVersion', song_id: songId, label, body_chordpro: $('#editor').value }),
+			})
+			if (res.ok) alert('Version saved')
+			else alert('Failed to save version')
+		} catch {
+			alert('Failed to save version')
+		}
 	})
 
 	// Auth controls (email link), show only if Supabase available
@@ -534,7 +543,7 @@ async function init() {
 			if (!email) return alert('Enter email')
 			const { error } = await sb.auth.signInWithOtp({
 				email,
-				options: { emailRedirectTo: window.location.origin + '/lyrics/' },
+				options: { emailRedirectTo: window.location.origin.replace('http://localhost:8888','') + '/lyrics/' },
 			})
 			if (error) return alert('Sign-in failed')
 			alert('Check your email for a sign-in link.')
