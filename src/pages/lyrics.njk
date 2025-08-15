@@ -32,7 +32,7 @@ layout: layout.njk
 <section class="songwriter" style="display:grid;grid-template-columns:minmax(300px,1fr) minmax(260px,380px);gap:1rem;align-items:start">
 	<div class="pane">
 	<h3 style="margin:.2rem 0 .6rem">Keyboard</h3>
-	<div id="piano" class="piano"></div>
+	<webaudio-keyboard id="piano" class="piano"></webaudio-keyboard>
 	<h3 style="margin:1rem 0 .6rem">Lyric editor</h3>
 	<textarea id="editor" class="lyric-input" spellcheck="false" style="width:100%;min-height:30vh;font: 15px/1.5 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;appearance:none;border:1px solid #d9d4f0;background:#f7f5ff;color:#1a1535;border-radius:12px;padding:.8rem"></textarea>
 		<details style="margin-top:.6rem">
@@ -103,4 +103,6 @@ layout: layout.njk
 	</div>
 </section>
 
+<!-- WebAudio Controls (web components) for realistic keyboard UI -->
+<script src="https://g200kg.github.io/webaudio-controls/webaudio-controls.js"></script>
 <script type="module" src="/assets/js/songwriter.js"></script>

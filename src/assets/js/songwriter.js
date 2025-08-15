@@ -849,6 +849,46 @@ function ensureDeleteButton() {
 function renderPiano() {
 	const el = document.querySelector('#piano')
 	if (!el) return
+	// If a plugin/web component keyboard is used, wire it and return
+	try {
+		if (el.tagName && el.tagName.toLowerCase() === 'webaudio-keyboard') {
+			const min = 55 // G3
+			const totalSemis = 32
+			const max = min + totalSemis
+			el.setAttribute('min', String(min))
+			el.setAttribute('max', String(max))
+			el.setAttribute('keys', String(totalSemis))
+			el.style.width = '100%'
+			el.style.height = '180px'
+			const toNote = (midi) =>
+				(typeof Tone?.Frequency === 'function'
+					? Tone.Frequency(midi, 'midi').toNote?.()
+					: null) || String(midi)
+			const onDown = async (midi) => {
+				await ensurePiano()
+				try { await Tone.start?.() } catch {}
+				piano?.triggerAttack(toNote(midi))
+			}
+			const onUp = (midi) => piano?.triggerRelease(toNote(midi))
+			// Common events exposed by webaudio-keyboard
+			el.addEventListener('noteon', (e) => {
+				const midi = e?.detail?.midi ?? e?.detail?.note ?? e?.detail
+				if (midi != null) onDown(midi)
+			})
+			el.addEventListener('noteoff', (e) => {
+				const midi = e?.detail?.midi ?? e?.detail?.note ?? e?.detail
+				if (midi != null) onUp(midi)
+			})
+			el.addEventListener('change', (e) => {
+				const midi = e?.detail?.midi ?? e?.detail?.note ?? e?.detail?.noteNumber
+				const val = e?.detail?.value
+				if (midi == null) return
+				if (val > 0) onDown(midi)
+				else onUp(midi)
+			})
+			return
+		}
+	} catch {}
 	// Build realistic keyboard: stack white keys in a flex row, position black keys on top
 	const start = 55 // G3 (MIDI ~55) as starting white key
 	const totalSemis = 32 // about 2.5 octaves
