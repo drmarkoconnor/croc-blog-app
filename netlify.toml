@@ -2,6 +2,11 @@
   command = "eleventy"
   publish = "_site"
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Basic-Auth = "croc:cr0c"
+
 [[redirects]]
   from = "/api/transcribe"
   to = "/.netlify/functions/transcribe"
