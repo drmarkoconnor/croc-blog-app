@@ -217,70 +217,81 @@ function fmt(t) {
 		ss = (s % 60).toString().padStart(2, '0')
 	return `${m}:${ss}`
 }
-$('#btnRec')?.addEventListener('click', async () => {
-	try {
-		media = await navigator.mediaDevices.getUserMedia({ audio: true })
-		chunks = []
-		rec = new MediaRecorder(media)
-		t0 = Date.now()
-		$('#recTimer').textContent = '00:00'
-		$('#btnRec').style.display = 'none'
-		$('#btnStop').style.display = ''
-		rec.ondataavailable = (e) => chunks.push(e.data)
-		rec.onstop = () => {
-			const blob = new Blob(chunks, { type: 'audio/webm' })
-			$('#recAudio').src = URL.createObjectURL(blob)
-			$('#recAudio').style.display = ''
-			$('#btnUpload').style.display = ''
-			media.getTracks().forEach((t) => t.stop())
-		}
-		rec.start()
-		const tick = () => {
-			if (!rec || rec.state !== 'recording') return
-			$('#recTimer').textContent = fmt(Date.now() - t0)
-			requestAnimationFrame(tick)
-		}
-		tick()
-	} catch (e) {
-		alert('Mic permission error')
-	}
-})
-$('#btnStop')?.addEventListener('click', () => {
-	try {
-		rec.stop()
-	} catch {}
-	$('#btnStop').style.display = 'none'
-	$('#btnRec').style.display = ''
-})
-$('#btnUpload')?.addEventListener('click', async () => {
-	if (!user || !songId) {
-		alert('Sign in first or start typing to create the song.')
-		return
-	}
-	const resp = await fetch($('#recAudio').src)
-	const buf = await resp.arrayBuffer()
-	const filename = `${crypto.randomUUID()}.webm`
-	const path = `${user.id}/${songId}/${filename}`
-	const { error } = await sb.storage
-		.from('audio_ideas')
-		.upload(path, new Blob([buf], { type: 'audio/webm' }), { upsert: false })
-	if (error) {
-		alert('Upload failed')
-		return
-	}
-	await sb.from('audio_ideas').insert({
-		song_id: songId,
-		storage_path: path,
-		duration_sec: Math.floor((Date.now() - t0) / 1000),
-	})
-	const li = document.createElement('li')
-	li.textContent = `Saved: ${filename}`
-	$('#audioList').appendChild(li)
-	$('#btnUpload').style.display = 'none'
-})(
-	// Auth + init
-	async function init() {}
-)
+{
+	const el = $('#btnRec')
+	if (el)
+		el.addEventListener('click', async () => {
+			try {
+				media = await navigator.mediaDevices.getUserMedia({ audio: true })
+				chunks = []
+				rec = new MediaRecorder(media)
+				t0 = Date.now()
+				$('#recTimer').textContent = '00:00'
+				$('#btnRec').style.display = 'none'
+				$('#btnStop').style.display = ''
+				rec.ondataavailable = (e) => chunks.push(e.data)
+				rec.onstop = () => {
+					const blob = new Blob(chunks, { type: 'audio/webm' })
+					$('#recAudio').src = URL.createObjectURL(blob)
+					$('#recAudio').style.display = ''
+					$('#btnUpload').style.display = ''
+					media.getTracks().forEach((t) => t.stop())
+				}
+				rec.start()
+				const tick = () => {
+					if (!rec || rec.state !== 'recording') return
+					$('#recTimer').textContent = fmt(Date.now() - t0)
+					requestAnimationFrame(tick)
+				}
+				tick()
+			} catch (e) {
+				alert('Mic permission error')
+			}
+		})
+}
+{
+	const el = $('#btnStop')
+	if (el)
+		el.addEventListener('click', () => {
+			try {
+				rec.stop()
+			} catch {}
+			$('#btnStop').style.display = 'none'
+			$('#btnRec').style.display = ''
+		})
+}
+{
+	const el = $('#btnUpload')
+	if (el)
+		el.addEventListener('click', async () => {
+			if (!user || !songId) {
+				alert('Sign in first or start typing to create the song.')
+				return
+			}
+			const resp = await fetch($('#recAudio').src)
+			const buf = await resp.arrayBuffer()
+			const filename = `${crypto.randomUUID()}.webm`
+			const path = `${user.id}/${songId}/${filename}`
+			const { error } = await sb.storage
+				.from('audio_ideas')
+				.upload(path, new Blob([buf], { type: 'audio/webm' }), {
+					upsert: false,
+				})
+			if (error) {
+				alert('Upload failed')
+				return
+			}
+			await sb.from('audio_ideas').insert({
+				song_id: songId,
+				storage_path: path,
+				duration_sec: Math.floor((Date.now() - t0) / 1000),
+			})
+			const li = document.createElement('li')
+			li.textContent = `Saved: ${filename}`
+			$('#audioList').appendChild(li)
+			$('#btnUpload').style.display = 'none'
+		})
+}
 
 // Auth + init
 async function init() {
