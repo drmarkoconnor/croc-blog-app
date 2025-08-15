@@ -5,6 +5,9 @@
 [[edge_functions]]
   path = "/*"
   function = "protect"
+  [edge_functions.environment]
+    SITE_BASIC_AUTH_USER = "${SITE_BASIC_AUTH_USER}"
+    SITE_BASIC_AUTH_PASS = "${SITE_BASIC_AUTH_PASS}"
 
 [[redirects]]
   from = "/api/transcribe"
