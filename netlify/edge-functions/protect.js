@@ -1,12 +1,8 @@
 export default async (request, context) => {
-	const bypass = ['/robots.txt', '/favicon.ico']
 	const url = new URL(request.url)
-	// Allow Netlify functions and static assets to flow; browser will re-use auth automatically after first success
-	if (
-		url.pathname.startsWith('/.netlify/functions/') ||
-		url.pathname.startsWith('/assets/') ||
-		bypass.includes(url.pathname)
-	) {
+	// Allow only truly benign public files if needed; by default protect everything
+	const publicBypass = new Set(['/robots.txt', '/favicon.ico'])
+	if (publicBypass.has(url.pathname)) {
 		return context.next()
 	}
 
