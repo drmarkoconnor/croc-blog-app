@@ -1,13 +1,23 @@
+import {
+	SITE_BASIC_AUTH_USER as ENV_USER,
+	SITE_BASIC_AUTH_PASS as ENV_PASS,
+} from 'netlify:env'
 export default async (request, context) => {
-	// Prefer Edge runtime env, fallback to Node env for local dev
+	// Prefer Edge import, then context.env, then Node env for local dev
 	const ce = context?.env || {}
-	const SITE_BASIC_AUTH_USER =
+	const USER =
+		ENV_USER ??
 		ce.SITE_BASIC_AUTH_USER ??
-		(typeof process !== 'undefined' && process?.env?.SITE_BASIC_AUTH_USER)
-	const SITE_BASIC_AUTH_PASS =
+		(typeof process !== 'undefined'
+			? process?.env?.SITE_BASIC_AUTH_USER
+			: undefined)
+	const PASS =
+		ENV_PASS ??
 		ce.SITE_BASIC_AUTH_PASS ??
-		(typeof process !== 'undefined' && process?.env?.SITE_BASIC_AUTH_PASS)
-	if (!SITE_BASIC_AUTH_USER || !SITE_BASIC_AUTH_PASS) {
+		(typeof process !== 'undefined'
+			? process?.env?.SITE_BASIC_AUTH_PASS
+			: undefined)
+	if (!USER || !PASS) {
 		return new Response(
 			'Server misconfigured: missing SITE_BASIC_AUTH_USER/PASS',
 			{ status: 500 }
@@ -38,7 +48,7 @@ export default async (request, context) => {
 			const sep = decoded.indexOf(':')
 			const au = sep >= 0 ? decoded.slice(0, sep) : decoded
 			const ap = sep >= 0 ? decoded.slice(sep + 1) : ''
-			if (au === SITE_BASIC_AUTH_USER && ap === SITE_BASIC_AUTH_PASS) {
+			if (au === USER && ap === PASS) {
 				return context.next()
 			}
 		} catch (_) {
