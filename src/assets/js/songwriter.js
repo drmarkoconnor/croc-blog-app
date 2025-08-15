@@ -129,7 +129,8 @@ async function autosave() {
 		}
 		await saveDraft({ id: 'current', payload, ts: Date.now() })
 		try {
-			if (!user) return // offline/anon draft only
+			// If Supabase isn't configured or user not signed in, keep local only
+			if (!sb || !user) return
 			if (!songId) {
 				const { data, error } = await sb
 					.from('songs')
@@ -146,7 +147,6 @@ async function autosave() {
 				if (error) throw error
 			}
 		} catch (e) {
-			// leave draft locally; no blocking
 			console.warn('autosave failed', e)
 		}
 	}, 800)
@@ -268,73 +268,172 @@ $('#btnUpload')?.addEventListener('click', async () => {
 		alert('Upload failed')
 		return
 	}
-	await sb
-		.from('audio_ideas')
-		.insert({
-			song_id: songId,
-			storage_path: path,
-			duration_sec: Math.floor((Date.now() - t0) / 1000),
-		})
+	await sb.from('audio_ideas').insert({
+		song_id: songId,
+		storage_path: path,
+		duration_sec: Math.floor((Date.now() - t0) / 1000),
+	})
 	const li = document.createElement('li')
 	li.textContent = `Saved: ${filename}`
 	$('#audioList').appendChild(li)
 	$('#btnUpload').style.display = 'none'
 })(
 	// Auth + init
-	async function init() {
+	async function init() {}
+)
+
+// Auth + init
+async function init() {
+	try {
 		sb = await initSupabase()
-		const {
-			data: { session },
-		} = await sb.auth.getSession()
-		user = session?.user || null
-		$('#authEmail').style.display = user ? 'none' : ''
-		$('#btnSignIn').style.display = user ? 'none' : ''
-		$('#btnSignOut').style.display = user ? '' : 'none'
-		$('#authStatus').textContent = user ? `Signed in` : 'Signed out'
+	} catch (e) {
+		sb = null
+	}
 
-		sb.auth.onAuthStateChange((_evt, sess) => {
-			user = sess?.user || null
-		})
-
-		// Restore draft
-		const d = await loadDraft('current')
-		if (d?.payload) {
-			$('#songTitle').value = d.payload.title || ''
-			$('#songKey').value = d.payload.key || 'C'
-			$('#songBpm').value = d.payload.bpm || 90
-			$('#editor').value = d.payload.body_chordpro || ''
+	// If Supabase configured, check session; else hide auth UI and run offline
+	if (sb) {
+		try {
+			const {
+				data: { session },
+			} = await sb.auth.getSession()
+			user = session?.user || null
+			sb.auth.onAuthStateChange((_evt, sess) => {
+				user = sess?.user || null
+				$('#authStatus').textContent = user ? 'Signed in' : 'Signed out'
+				$('#authEmail').style.display = user ? 'none' : ''
+				$('#btnSignIn').style.display = user ? 'none' : ''
+				$('#btnSignOut').style.display = user ? '' : 'none'
+			})
+			$('#authStatus').textContent = user ? 'Signed in' : 'Signed out'
+			$('#authEmail').style.display = user ? 'none' : ''
+			$('#btnSignIn').style.display = user ? 'none' : ''
+			$('#btnSignOut').style.display = user ? '' : 'none'
+		} catch (e) {
+			// Fallback to offline
+			sb = null
 		}
+	}
+	if (!sb) {
+		$('#authStatus').textContent = 'Offline mode'
+		$('#authEmail').style.display = 'none'
+		$('#btnSignIn').style.display = 'none'
+		$('#btnSignOut').style.display = 'none'
+	}
+
+	// Restore draft
+	const d = await loadDraft('current')
+	if (d?.payload) {
+		$('#songTitle').value = d.payload.title || ''
+		$('#songKey').value = d.payload.key || 'C'
+		$('#songBpm').value = d.payload.bpm || 90
+		$('#editor').value = d.payload.body_chordpro || ''
+	}
+	renderPalette()
+
+	// Handlers
+	$('#songKey').addEventListener('change', () => {
 		renderPalette()
+		autosave()
+	})
+	$('#songTitle').addEventListener('input', autosave)
+	$('#songBpm').addEventListener('input', autosave)
+	$('#editor').addEventListener('input', autosave)
+	$('#btnTransposeDown').addEventListener('click', () => {
+		const pref = preferAccidental($('#songKey').value)
+		$('#editor').value = transposeChordPro($('#editor').value, -1, pref)
+		autosave()
+	})
+	$('#btnTransposeUp').addEventListener('click', () => {
+		const pref = preferAccidental($('#songKey').value)
+		$('#editor').value = transposeChordPro($('#editor').value, 1, pref)
+		autosave()
+	})
+	$('#btnAudition').addEventListener('click', () => {
+		const val = $('#editor').value
+		const pos = $('#editor').selectionStart || 0
+		const upto = val.slice(0, pos)
+		const m = upto.match(/\[([^\]]+)\](?!.*\[[^\]]+\])/) // last chord before cursor
+		if (m) audition(m[1])
+		else {
+			// audition tonic by default
+			audition($('#songKey').value)
+		}
+	})
 
-		// Handlers
-		$('#songKey').addEventListener('change', () => {
-			renderPalette()
+	// Wire: New, Export, Import, Save Version
+	$('#btnNew')?.addEventListener('click', async () => {
+		if (
+			!confirm(
+				'Start a new blank song? Unsaved local changes are kept in drafts.'
+			)
+		)
+			return
+		songId = null
+		$('#songTitle').value = ''
+		$('#songKey').value = 'C'
+		$('#songBpm').value = 90
+		$('#editor').value = ''
+		renderPalette()
+		autosave()
+	})
+	$('#btnExport')?.addEventListener('click', () => {
+		const payload = {
+			title: $('#songTitle').value || 'Untitled',
+			key: $('#songKey').value,
+			bpm: $('#songBpm').value,
+			body_chordpro: $('#editor').value,
+		}
+		const blob = new Blob([JSON.stringify(payload, null, 2)], {
+			type: 'application/json',
+		})
+		const a = document.createElement('a')
+		a.href = URL.createObjectURL(blob)
+		a.download = (payload.title || 'song') + '.songcraft.json'
+		a.click()
+		URL.revokeObjectURL(a.href)
+	})
+	$('#importFile')?.addEventListener('change', async (e) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+		const text = await file.text()
+		if (file.name.endsWith('.json')) {
+			try {
+				const p = JSON.parse(text)
+				if (p.title) $('#songTitle').value = p.title
+				if (p.key) $('#songKey').value = p.key
+				if (p.bpm) $('#songBpm').value = p.bpm
+				if (p.body_chordpro) $('#editor').value = p.body_chordpro
+				renderPalette()
+				autosave()
+			} catch {
+				alert('Invalid JSON file')
+			}
+		} else {
+			// treat as raw ChordPro
+			$('#editor').value = text
 			autosave()
+		}
+		e.target.value = ''
+	})
+	$('#btnSaveVersion')?.addEventListener('click', async () => {
+		if (!sb || !user) return alert('Sign in to save versions to the cloud.')
+		if (!songId) await autosave() // ensure song exists
+		if (!songId) return alert('Type something first to create the song.')
+		const label = prompt(
+			'Label for this version (optional):',
+			new Date().toLocaleString()
+		)
+		const { error } = await sb.from('song_versions').insert({
+			song_id: songId,
+			label,
+			body_chordpro: $('#editor').value,
 		})
-		$('#songTitle').addEventListener('input', autosave)
-		$('#songBpm').addEventListener('input', autosave)
-		$('#editor').addEventListener('input', autosave)
-		$('#btnTransposeDown').addEventListener('click', () => {
-			const pref = preferAccidental($('#songKey').value)
-			$('#editor').value = transposeChordPro($('#editor').value, -1, pref)
-			autosave()
-		})
-		$('#btnTransposeUp').addEventListener('click', () => {
-			const pref = preferAccidental($('#songKey').value)
-			$('#editor').value = transposeChordPro($('#editor').value, 1, pref)
-			autosave()
-		})
-		$('#btnAudition').addEventListener('click', () => {
-			const sel = window.getSelection()
-			const val = $('#editor').value
-			const pos = $('#editor').selectionStart
-			// naive: audition last chord before cursor
-			const upto = val.slice(0, pos)
-			const m = upto.match(/\[([^\]]+)\](?!.*\[[^\]]+\])/)
-			if (m) audition(m[1])
-		})
+		if (error) alert('Failed to save version')
+		else alert('Version saved')
+	})
 
-		// Auth controls (email link)
+	// Auth controls (email link), show only if Supabase available
+	if (sb) {
 		$('#btnSignIn').addEventListener('click', async () => {
 			const email = $('#authEmail').value.trim()
 			if (!email) return alert('Enter email')
@@ -350,5 +449,8 @@ $('#btnUpload')?.addEventListener('click', async () => {
 			location.reload()
 		})
 	}
-)()
+}
+
+// Kick off
+init()
 
