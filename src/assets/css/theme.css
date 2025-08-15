@@ -245,24 +245,51 @@ main {
 .palette-grid .btn.btn-small:hover {
 	background: #2a334a;
 }
-.sound-panel .pad {
-	appearance: none;
-	border: 1px solid rgba(255, 255, 255, 0.22);
-	background: rgba(255, 255, 255, 0.08);
-	color: #fff;
-	padding: 0.8rem 0.6rem;
-	border-radius: 12px;
-	font-weight: 800;
-	cursor: pointer;
-}
-.sound-panel .pad:hover { background: rgba(255, 255, 255, 0.14); }
-.sound-panel .pad:active {
-	background: #1f3b0a;
-	transform: translateY(1px) scale(0.99);
-}
+/* Piano keyboard minimal styles (additional inline styles set in JS) */
+.piano .pkey { cursor: pointer; }
 .card h3 {
 	margin-top: 0;
 	font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+}
+.bar-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 6px;
+	margin-top: .2rem;
+	background: rgba(255,255,255,0.06);
+	border: 1px solid rgba(255,255,255,0.12);
+	border-radius: 10px;
+	padding: 6px;
+}
+.bar-cell {
+	min-height: 46px;
+	background: rgba(255,255,255,0.08);
+	border: 1px solid rgba(255,255,255,0.18);
+	border-radius: 8px;
+	padding: 6px;
+	font-weight: 800;
+	color: #fff;
+	position: relative;
+}
+.bar-section {
+	font-weight: 900;
+	letter-spacing: .02em;
+	color: #fff;
+	opacity: .9;
+	margin-top: .25rem;
+}
+.bar-cell .beat-grid {
+	position: absolute;
+	left: 0; right: 0; bottom: 0;
+	height: 4px;
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+}
+.bar-cell .beat-grid span { background: rgba(255,255,255,0.2); margin: 0 1px; border-radius: 2px; }
+
+@media (max-width: 430px) {
+	.bar-grid { grid-template-columns: repeat(2, 1fr); }
 }
 .card p {
 	color: #fff;

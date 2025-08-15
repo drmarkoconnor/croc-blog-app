@@ -174,20 +174,116 @@ async function renderPalette() {
 	borrowed.forEach((c) => bor.appendChild(makeBtn(c)))
 }
 
-// Audio audition via Tone.js (optional)
-let Tone, synth, poly, TonalMod, reverb, eq, drum, guitar, piano
-const PREF_KEY = 'songwriter_prefs'
-function getPrefs() {
-	try {
-		return JSON.parse(localStorage.getItem(PREF_KEY) || '{}')
-	} catch {
-		return {}
+// Structure helpers: use | as bar delimiter; build a preview grid like iReal
+function insertBarDelimiter() {
+	const ed = document.querySelector('#editor')
+	if (!ed) return
+	insertAtCursor(ed, ' | ')
+	autosave(); renderBarPreview()
+}
+function addEmptyBars(n = 4) {
+	const ed = document.querySelector('#editor')
+	if (!ed) return
+	const bars = Array.from({ length: n }, () => ' | ').join('')
+	insertAtCursor(ed, bars)
+	autosave(); renderBarPreview()
+}
+function parseBarsDetailed() {
+	const text = document.querySelector('#editor')?.value || ''
+	const beatsPerBar = parseInt(document.querySelector('#timeBeats')?.value || '4', 10)
+	const lines = text.split(/\n/)
+	const out = [] // items: { type:'section', title } | { type:'bar', chords:[{sym,beats}] }
+	const chordToken = /(\[([^\]]+)\]|([A-G](?:#|b)?[^\s\|\{\}]*))(?:\{(\d+)\})?/g
+	const sectionLine = /^\s*\[([^\]]+)\]\s*$/
+	const isChordLike = (s) => /^[A-G](?:#|b)?/.test(s)
+	for (const rawLine of lines) {
+		const line = rawLine.trim()
+		const sec = line.match(sectionLine)
+		if (sec && !isChordLike(sec[1] || '')) {
+			out.push({ type: 'section', title: sec[1].trim() })
+			continue
+		}
+		if (!line) continue
+		const segments = line.split('|')
+		for (let seg of segments) {
+			seg = seg.trim()
+			if (seg === '' && out.length === 0) continue
+			if (seg === '%') {
+				// repeat previous bar (copy chords)
+				for (let j = out.length - 1; j >= 0; j--) {
+					if (out[j]?.type === 'bar') {
+						const prev = out[j]
+						out.push({ type: 'bar', chords: prev.chords.map((c) => ({ ...c })) })
+						break
+					}
+				}
+				continue
+			}
+			const chords = []
+			let m
+			while ((m = chordToken.exec(seg))) {
+				const sym = (m[2] || m[3] || '').trim()
+				if (!sym) continue
+				const beats = m[4] ? parseInt(m[4], 10) : 0
+				chords.push({ sym, beats })
+			}
+			if (!chords.length) {
+				out.push({ type: 'bar', chords: [] })
+				continue
+			}
+			// assign default beats where 0, distributing evenly
+			const zeros = chords.filter((c) => !c.beats).length
+			if (zeros) {
+				const count = chords.length
+				const base = Math.floor(beatsPerBar / count)
+				const rem = beatsPerBar - base * count
+				chords.forEach((c, i) => {
+					if (!c.beats) c.beats = base + (i === count - 1 ? rem : 0)
+				})
+			}
+			out.push({ type: 'bar', chords })
+		}
 	}
+	return { items: out, beatsPerBar }
 }
-function setPrefs(p) {
-	const cur = getPrefs()
-	localStorage.setItem(PREF_KEY, JSON.stringify({ ...cur, ...p }))
+function renderBarPreview() {
+	const wrap = document.querySelector('#barPreview')
+	if (!wrap) return
+	const bpl = parseInt(document.querySelector('#barsPerLine')?.value || '4', 10)
+	const beats = parseInt(document.querySelector('#timeBeats')?.value || '4', 10)
+	const parsed = parseBarsDetailed()
+	const items = parsed.items
+	wrap.innerHTML = ''
+	wrap.style.gridTemplateColumns = `repeat(${bpl}, 1fr)`
+	items.forEach((it) => {
+		if (it.type === 'section') {
+			const sec = document.createElement('div')
+			sec.className = 'bar-section'
+			sec.textContent = it.title
+			sec.style.gridColumn = `1 / ${bpl + 1}`
+			wrap.appendChild(sec)
+			return
+		}
+		const cell = document.createElement('div')
+		cell.className = 'bar-cell'
+		const label = it.chords
+			.map((c) => (c.beats && c.beats !== beats ? `${c.sym}(${c.beats})` : c.sym))
+			.join('  ')
+		cell.textContent = label || '—'
+		const beatsRow = document.createElement('div')
+		beatsRow.className = 'beat-grid'
+		for (let i = 0; i < beats; i++) {
+			const sp = document.createElement('span')
+			beatsRow.appendChild(sp)
+		}
+		cell.appendChild(beatsRow)
+		wrap.appendChild(cell)
+	})
 }
+
+// Audio audition via Tone.js (optional)
+let Tone, synth, poly, TonalMod, reverb, eq, piano
+// (Removed instrument preference; piano is the only voice)
 async function ensureTone() {
 	if (Tone) return
 	try {
@@ -208,15 +304,7 @@ async function ensureTone() {
 			oscillator: { type: 'triangle' },
 			envelope: { attack: 0.02, release: 0.9 },
 		}).connect(reverb)
-		// Simple drum voices
-		drum = {
-			kick: new Tone.MembraneSynth({ pitchDecay: 0.008, octaves: 4, envelope: { attack: 0.001, decay: 0.5, sustain: 0 } }).connect(eq),
-			snare: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).connect(eq),
-			hat: new Tone.MetalSynth({ frequency: 400, envelope: { attack: 0.001, decay: 0.1, release: 0.01 }, harmonicity: 5.1, modulationIndex: 32 }).connect(eq),
-		}
-		// Guitar-like plucked synth for strumming
-		guitar = new Tone.PluckSynth({ attackNoise: 1, dampening: 3600, resonance: 0.9 }).connect(reverb)
-	// Optional: lazy-load tonal for chord parsing
+		// Optional: lazy-load tonal for chord parsing
 		TonalMod = await import('https://esm.sh/@tonaljs/tonal@5')
 	} catch (e) {
 		console.warn('Tone load failed; fallback silent', e)
@@ -304,17 +392,11 @@ async function audition(sym) {
 	const chordPc =
 		chordNotesFromSymbol(sym) ||
 		chordNotesFromSymbol($('#songKey')?.value || 'C')
-	const mode = getPrefs().voice || 'pad'
+	const mode = 'piano'
 	if (chordPc?.length) {
 		const notes = withOctaves(chordPc)
 		try {
-			if (mode === 'guitar') {
-				await strum(notes)
-			} else if (mode === 'piano') {
-				await playPiano(notes)
-			} else if (poly) {
-				poly.triggerAttackRelease(notes, '1n')
-			}
+			await playPiano(notes)
 			return
 		} catch {}
 	}
@@ -327,23 +409,7 @@ async function audition(sym) {
 	}
 }
 
-// Guitar strummer: gentle arpeggio
-async function strum(notes) {
-	await ensureTone()
-	if (!Tone) return
-	const now = Tone.now()
-	const gap = 0.06
-	for (let i = 0; i < notes.length; i++) {
-		const t = now + i * gap
-		try {
-			if (guitar?.triggerAttackRelease) {
-				guitar.triggerAttackRelease(notes[i], 0.6, t, 0.9)
-			} else if (synth?.triggerAttackRelease) {
-				synth.triggerAttackRelease(notes[i], 0.6, t, 0.85)
-			}
-		} catch {}
-	}
-}
+// (Guitar/drums removed to keep the app focused on piano)
 
 // Piano: sample-based via Tone.Sampler
 async function ensurePiano() {
@@ -525,6 +591,7 @@ async function init() {
 	$('#songTitle').addEventListener('input', autosave)
 	$('#songBpm').addEventListener('input', autosave)
 	$('#editor').addEventListener('input', autosave)
+	$('#editor').addEventListener('input', renderBarPreview)
 	$('#btnTransposeDown').addEventListener('click', () => {
 		const pref = preferAccidental($('#songKey').value)
 		$('#editor').value = transposeChordPro($('#editor').value, -1, pref)
@@ -535,10 +602,9 @@ async function init() {
 		$('#editor').value = transposeChordPro($('#editor').value, 1, pref)
 		autosave()
 	})
-	$('#btnAudition').addEventListener('click', async () => {
+    $('#btnAudition').addEventListener('click', async () => {
 		await ensureTone();
-		try { await Tone.start?.() } catch {}
-		try { await Tone.start?.() } catch {}
+        try { await Tone.start?.() } catch {}
 		const val = $('#editor').value
 		const pos = $('#editor').selectionStart || 0
 		const upto = val.slice(0, pos)
@@ -549,6 +615,20 @@ async function init() {
 			audition($('#songKey').value)
 		}
 	})
+
+	// Structure controls
+	$('#btnInsertBar')?.addEventListener('click', insertBarDelimiter)
+	$('#btnAdd4Bars')?.addEventListener('click', () => addEmptyBars(4))
+	$('#timeBeats')?.addEventListener('change', renderBarPreview)
+	$('#barsPerLine')?.addEventListener('change', renderBarPreview)
+
+	// Play/Stop song buttons
+	$('#btnPlaySong')?.addEventListener('click', () => playSongFromEditor())
+	$('#btnStopSong')?.addEventListener('click', () => stopSong())
+
+	// Play/Stop song buttons
+	$('#btnPlaySong')?.addEventListener('click', () => playSongFromEditor())
+	$('#btnStopSong')?.addEventListener('click', () => stopSong())
 
 	// Wire: New, Export, Import, Save Version
 	$('#btnNew')?.addEventListener('click', async () => {
@@ -640,6 +720,8 @@ async function init() {
 
 // Kick off
 init()
+renderBarPreview()
+renderPiano()
 
 // Recent songs (top 5)
 async function renderRecent() {
@@ -728,36 +810,90 @@ function ensureDeleteButton() {
 	})
 }
 
-// Wire sound panel events and restore prefs
-function wireSoundPanel() {
-	const sel = document.querySelector('#voiceSelect')
-	if (sel) {
-		const prefs = getPrefs()
-		if (prefs.voice) sel.value = prefs.voice
-		sel.addEventListener('change', () => setPrefs({ voice: sel.value }))
-	}
-	const pads = document.querySelectorAll('.sound-panel .pad')
-	if (pads?.length) {
-		pads.forEach((p) =>
-			p.addEventListener('click', async () => {
-				await ensureTone()
-				try { await Tone.start?.() } catch {}
-				const which = p.dataset.pad
-				try {
-					if (which === 'kick') drum?.kick?.triggerAttackRelease('C1', '8n')
-					else if (which === 'snare') drum?.snare?.triggerAttackRelease('8n')
-					else if (which === 'hat') drum?.hat?.triggerAttackRelease('16n')
-				} catch {}
-			})
-		)
-	}
+// Render a simple 2.5-octave piano keyboard for melody picking
+function renderPiano() {
+	const el = document.querySelector('#piano')
+	if (!el) return
+	const start = 60 - 4 // C4 minus 4 semitones = G3
+	const keys = []
+	for (let i = 0; i < 32; i++) keys.push(start + i) // ~2.5 octaves
+	el.innerHTML = ''
+	el.style.display = 'grid'
+	el.style.gridAutoFlow = 'column'
+	el.style.gridAutoColumns = 'minmax(22px,1fr)'
+	el.style.gap = '2px'
+	keys.forEach((midi) => {
+		const name = Tone?.Frequency?.(midi, 'midi')?.toNote?.() || midi
+		const isSharp = /#/.test(name)
+		const btn = document.createElement('button')
+		btn.className = 'pkey'
+		btn.textContent = ''
+		btn.style.height = isSharp ? '90px' : '140px'
+		btn.style.alignSelf = 'end'
+		btn.style.borderRadius = '6px'
+		btn.style.border = '1px solid rgba(255,255,255,.2)'
+		btn.style.background = isSharp ? '#1c2032' : '#f3f3f7'
+		btn.style.color = isSharp ? '#fff' : '#111'
+		btn.style.position = 'relative'
+		btn.title = name
+		const startNote = async () => {
+			await ensurePiano(); try { await Tone.start?.() } catch {}
+			piano?.triggerAttack(name)
+		}
+		const stopNote = () => { piano?.triggerRelease(name) }
+		btn.addEventListener('mousedown', startNote)
+		btn.addEventListener('touchstart', (e) => { e.preventDefault(); startNote() }, { passive: false })
+		btn.addEventListener('mouseup', stopNote)
+		btn.addEventListener('mouseleave', stopNote)
+		btn.addEventListener('touchend', stopNote)
+		el.appendChild(btn)
+	})
 }
 
-// Run sound panel wiring after DOMContentLoaded fallback
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', wireSoundPanel)
-} else {
-	wireSoundPanel()
+// Simple chord playback across the editor's chord tags [Cmaj7] etc.
+let songTimerHandles = []
+function stopSong() {
+	songTimerHandles.forEach((h) => clearTimeout(h))
+	songTimerHandles = []
+	try { Tone.Transport.stop() } catch {}
+}
+async function playSongFromEditor() {
+	const bpm = parseInt(document.querySelector('#songBpm')?.value || '90', 10)
+	const parsed = parseBarsDetailed()
+	const items = parsed.items
+	if (!items.some((x) => x.type === 'bar' && x.chords.length)) {
+		// fallback: scan chord tags only
+		const text = document.querySelector('#editor')?.value || ''
+		const chords = []
+		const re = /\[([^\]]+)\]/g
+		let m
+		while ((m = re.exec(text))) chords.push(m[1])
+		if (!chords.length) return alert('No chords found in the editor.')
+		await ensurePiano(); try { await Tone.start?.() } catch {}
+		const beatMs = 60000 / bpm
+		stopSong()
+		chords.forEach((sym, i) => {
+			const h = setTimeout(() => audition(sym), i * 4 * beatMs)
+			songTimerHandles.push(h)
+		})
+		return
+	}
+	await ensurePiano(); try { await Tone.start?.() } catch {}
+	const beatMs = 60000 / bpm
+	stopSong()
+	let t = 0
+	for (const it of items) {
+		if (it.type !== 'bar') continue
+		if (!it.chords.length) { t += parsed.beatsPerBar * beatMs; continue }
+		const total = it.chords.reduce((s, c) => s + (c.beats || 0), 0) || parsed.beatsPerBar
+		const scale = (parsed.beatsPerBar * beatMs) / total
+		for (const c of it.chords) {
+			const dur = (c.beats || 1) * scale
+			const h = setTimeout(() => audition(c.sym), t)
+			songTimerHandles.push(h)
+			t += dur
+		}
+	}
 }
 
 // Takes rendering

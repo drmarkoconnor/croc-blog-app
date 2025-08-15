@@ -59,22 +59,33 @@ layout: layout.njk
 		</details>
 		<div style="margin-top:1rem">
 			<button class="btn btn-small" id="btnAudition">Play chord</button>
+			<button class="btn btn-small" id="btnPlaySong" style="background:#2a2a4a">Play song</button>
+			<button class="btn btn-small" id="btnStopSong" style="background:#444">Stop</button>
 		</div>
 		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
-		<h3 style="margin:.2rem 0 .6rem">Sound</h3>
-		<div class="sound-panel" style="display:grid;gap:.6rem">
-			<label style="display:flex;gap:.5rem;align-items:center">Instrument
-				<select id="voiceSelect" style="appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:#fff;padding:.45rem .5rem;border-radius:8px">
-					<option value="pad">Soft Pad</option>
-					<option value="piano">Piano (Samples)</option>
-					<option value="guitar">Guitar Strum</option>
-				</select>
-			</label>
-			<div class="pad-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem">
-				<button class="pad" data-pad="kick">Kick</button>
-				<button class="pad" data-pad="snare">Snare</button>
-				<button class="pad" data-pad="hat">Hat</button>
+		<h3 style="margin:.2rem 0 .6rem">Keyboard</h3>
+		<div id="piano" class="piano"></div>
+		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
+		<h3 style="margin:.2rem 0 .6rem">Structure</h3>
+		<div class="structure" style="display:grid;gap:.6rem">
+			<div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+				<label>Time sig
+					<select id="timeBeats" style="appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:#fff;padding:.45rem .5rem;border-radius:8px">
+						<option value="4" selected>4/4</option>
+						<option value="3">3/4</option>
+						<option value="6">6/8</option>
+					</select>
+				</label>
+				<label>Bars/line
+					<select id="barsPerLine" style="appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);color:#fff;padding:.45rem .5rem;border-radius:8px">
+						<option value="4" selected>4</option>
+						<option value="8">8</option>
+					</select>
+				</label>
+				<button class="btn btn-small" id="btnInsertBar">Insert bar |</button>
+				<button class="btn btn-small" id="btnAdd4Bars" style="background:#2a2a4a">Add 4 empty bars</button>
 			</div>
+			<div id="barPreview" class="bar-grid"></div>
 		</div>
 		<hr style="border:none;height:1px;background:#ffffff1a;margin:1rem 0"/>
 		<h4 style="margin:.2rem 0 .6rem">Recent songs</h4>
