@@ -10,7 +10,10 @@ export default async (request, context) => {
 			decoded = typeof atob === 'function' ? atob(b64) : ''
 		} catch (_) {
 			try {
-				decoded = typeof Buffer !== 'undefined' ? Buffer.from(b64, 'base64').toString('utf-8') : ''
+				decoded =
+					typeof Buffer !== 'undefined'
+						? Buffer.from(b64, 'base64').toString('utf-8')
+						: ''
 			} catch (_) {
 				decoded = ''
 			}
