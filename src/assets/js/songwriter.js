@@ -858,9 +858,15 @@ function renderPiano() {
 			const min = 48 // C3
 			const totalSemis = 25
 			// Configure via properties (redraw) and attributes (initial parse)
-			try { el.min = min } catch {}
-			try { el.keys = totalSemis } catch {}
-			try { el.height = 180 } catch {}
+			try {
+				el.min = min
+			} catch {}
+			try {
+				el.keys = totalSemis
+			} catch {}
+			try {
+				el.height = 180
+			} catch {}
 			el.setAttribute('min', String(min))
 			el.setAttribute('keys', String(totalSemis))
 			el.setAttribute('height', '180')
@@ -877,14 +883,20 @@ function renderPiano() {
 			const mapToNote = (payload) => {
 				// Accept midi (0-127), noteNumber, note string (e.g., 'C#4'), or frequency Hz
 				const midi =
-					payload?.midi ?? payload?.noteNumber ??
-					(typeof payload === 'number' && payload >= 0 && payload <= 127 ? payload : undefined)
-				const noteStr = payload?.note || (typeof payload === 'string' ? payload : undefined)
+					payload?.midi ??
+					payload?.noteNumber ??
+					(typeof payload === 'number' && payload >= 0 && payload <= 127
+						? payload
+						: undefined)
+				const noteStr =
+					payload?.note || (typeof payload === 'string' ? payload : undefined)
 				const freq = payload?.frequency ?? payload?.freq
 				if (midi != null) return toneNoteFromMidi(midi)
 				if (noteStr) return noteStr
 				if (typeof freq === 'number') {
-					try { return Tone?.Frequency?.(freq)?.toNote?.() || String(freq) } catch {}
+					try {
+						return Tone?.Frequency?.(freq)?.toNote?.() || String(freq)
+					} catch {}
 					return String(freq)
 				}
 				return undefined
@@ -893,7 +905,9 @@ function renderPiano() {
 				const note = mapToNote(payload)
 				if (!note) return
 				await ensurePiano()
-				try { await Tone.start?.() } catch {}
+				try {
+					await Tone.start?.()
+				} catch {}
 				piano?.triggerAttack(note)
 			}
 			const onUp = (payload) => {
@@ -905,7 +919,9 @@ function renderPiano() {
 			el.addEventListener(
 				'pointerdown',
 				async () => {
-					try { await Tone.start?.() } catch {}
+					try {
+						await Tone.start?.()
+					} catch {}
 				},
 				{ passive: true }
 			)
@@ -951,7 +967,9 @@ function renderPiano() {
 					const note = toneNoteFromMidi(midi)
 					if (!note) return
 					await ensurePiano()
-					try { await Tone.start?.() } catch {}
+					try {
+						await Tone.start?.()
+					} catch {}
 					if (isOn) piano?.triggerAttack(note)
 					else piano?.triggerRelease(note)
 					return
