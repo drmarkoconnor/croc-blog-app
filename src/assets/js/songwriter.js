@@ -857,7 +857,10 @@ function renderPiano() {
 			// Center around middle C: C3 (48) to C5 (72) => 25 semitones inclusive
 			const min = 48 // C3
 			const totalSemis = 25
-			// webaudio-keyboard attributes
+			// Configure via properties (redraw) and attributes (initial parse)
+			try { el.min = min } catch {}
+			try { el.keys = totalSemis } catch {}
+			try { el.height = 180 } catch {}
 			el.setAttribute('min', String(min))
 			el.setAttribute('keys', String(totalSemis))
 			el.setAttribute('height', '180')
@@ -906,12 +909,45 @@ function renderPiano() {
 				},
 				{ passive: true }
 			)
-			// webaudio-keyboard emits 'change' with e.note = [on(1)/off(0), midi]
+			// webaudio-keyboard emits 'change' with e.note = [on(1)/off(0), value]
+			// Some builds send absolute MIDI note; others send an index from `min` (white-key index).
+			const whitePosByPc = { 0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6 }
+			const whiteSteps = [2, 2, 1, 2, 2, 2, 1] // semitone gaps between white keys C..B
+			const whiteIndexToMidi = (baseMidi, idx) => {
+				// baseMidi must be a white key. Compute midi of idx-th next white key.
+				let m = baseMidi
+				const pc = ((baseMidi % 12) + 12) % 12
+				let pos = whitePosByPc[pc]
+				if (pos == null) {
+					// if somehow not white, back off to previous white
+					let b = baseMidi
+					while (!whitePosByPc[((b % 12) + 12) % 12]) b--
+					m = b
+					pos = whitePosByPc[((b % 12) + 12) % 12]
+				}
+				for (let i = 0; i < idx; i++) {
+					m += whiteSteps[pos]
+					pos = (pos + 1) % 7
+				}
+				return m
+			}
 			el.addEventListener('change', async (e) => {
 				const n = e?.note
 				if (Array.isArray(n)) {
 					const isOn = !!n[0]
-					const midi = n[1]
+					let midi = n[1]
+					if (typeof midi === 'number') {
+						// Interpret small values (<= keys+1) as white-key index; otherwise as absolute midi
+						const k = typeof el.keys === 'number' ? el.keys : totalSemis
+						if (midi <= k + 1) {
+							const base = typeof el.min === 'number' ? el.min : min
+							midi = whiteIndexToMidi(base, midi)
+						} else if (midi < 21) {
+							// Very low absolute is unlikely; still treat as index
+							const base = typeof el.min === 'number' ? el.min : min
+							midi = whiteIndexToMidi(base, midi)
+						}
+					}
 					const note = toneNoteFromMidi(midi)
 					if (!note) return
 					await ensurePiano()
