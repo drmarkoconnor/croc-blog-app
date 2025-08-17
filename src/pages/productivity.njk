@@ -225,6 +225,7 @@ layout: layout.njk
 	function done(){
 		clearInterval(tickTimer); display.textContent = '00:00';
 		celebrate(); speak();
+		try{ await window.Rewards?.award('pomodoro', 3, 'Pomodoro completed') }catch{}
 	}
 	function tick(){
 		if(!endAt) return;

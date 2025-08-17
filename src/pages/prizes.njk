@@ -1,0 +1,141 @@
+---
+title: Prizes
+layout: layout.njk
+---
+
+<h2>Prizes</h2>
+<p>Earn stars for using the app. Every 100 stars becomes one sun!</p>
+
+<section class="card" style="display:grid;gap:.75rem">
+  <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <div style="font-size:1.2rem"><strong>Totals</strong></div>
+    <div id="totals" style="font-weight:800">☀️ 0 suns · ⭐ 0 stars</div>
+  </div>
+  <div class="grid" style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <div class="card" style="background:rgba(255,255,255,0.06)">
+      <h3>Constellations</h3>
+      <p style="margin-top:-.5rem;opacity:.9">Fill the missing stars as you earn more.</p>
+      <div id="sky" style="background:#0a0d1a;border-radius:12px;padding:12px;aspect-ratio:4/3;position:relative;overflow:hidden"></div>
+      <div id="progress" style="margin-top:.5rem;opacity:.9"></div>
+    </div>
+    <div class="card" style="background:rgba(255,255,255,0.06)">
+      <h3>Recent Rewards</h3>
+      <ul id="history" style="list-style:none;padding:0;margin:0;display:grid;gap:.35rem"></ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function(){
+    const sky = document.getElementById('sky')
+    const hist = document.getElementById('history')
+    const totals = document.getElementById('totals')
+    const progress = document.getElementById('progress')
+
+    function renderTotals(s){
+      totals.textContent = `☀️ ${s.suns} suns · ⭐ ${s.stars} stars`
+    }
+
+    function renderHistory(s){
+      const fmt = (ts) => new Date(ts).toLocaleString()
+      hist.innerHTML = ''
+      if(!s.history.length){
+        const li = document.createElement('li')
+        li.style.opacity = '.8'
+        li.textContent = 'No rewards yet — go explore the app!'
+        hist.appendChild(li)
+        return
+      }
+      s.history.slice(0,50).forEach(h => {
+        const li = document.createElement('li')
+        li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.style.gap = '.5rem'
+        const left = document.createElement('span')
+        left.textContent = `${h.note || h.type}`
+        const right = document.createElement('span')
+        right.style.opacity = '.8'
+        right.textContent = `${h.amount?`+${h.amount}⭐`:''} · ${fmt(h.ts)}`
+        li.appendChild(left); li.appendChild(right)
+        hist.appendChild(li)
+      })
+    }
+
+    // Simple constellations: three classics with missing points that fill with stars
+    // We map progress 0..99 stars to filling points across all constellations
+    const CONSTELLATIONS = [
+      { name: 'Plough (Ursa Major)', points:[ [30,70],[40,60],[50,55],[60,50],[72,50],[82,46],[90,44] ], lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]] },
+      { name: "Orion's Belt", points:[ [20,30],[28,32],[36,34] ], lines:[[0,1],[1,2]] },
+      { name: 'Cassiopeia', points:[ [10,10],[18,14],[26,11],[34,15],[42,12] ], lines:[[0,1],[1,2],[2,3],[3,4]] },
+    ]
+
+    function renderSky(s){
+      sky.innerHTML = ''
+      const svgNS = 'http://www.w3.org/2000/svg'
+      const svg = document.createElementNS(svgNS,'svg')
+      svg.setAttribute('viewBox','0 0 100 75')
+      svg.style.width = '100%'; svg.style.height = '100%'
+      sky.appendChild(svg)
+
+      // Background scatter
+      for(let i=0;i<100;i++){
+        const c = document.createElementNS(svgNS,'circle')
+        c.setAttribute('cx', Math.random()*100)
+        c.setAttribute('cy', Math.random()*75)
+        c.setAttribute('r', Math.random()*0.4+0.1)
+        c.setAttribute('fill', '#9bb3ff')
+        c.setAttribute('opacity', Math.random()*0.6+0.2)
+        svg.appendChild(c)
+      }
+
+      // Calculate how many points to fill based on 0..99 stars
+      const stars = s.stars || 0
+      const totalPoints = CONSTELLATIONS.reduce((sum,c)=>sum+c.points.length,0)
+      const fillCount = Math.min(totalPoints, stars)
+      let filled = 0
+
+      let yOffset = 0
+      CONSTELLATIONS.forEach((cons, idx) => {
+        // Draw connecting lines
+        cons.lines.forEach(([a,b])=>{
+          const l = document.createElementNS(svgNS,'line')
+          l.setAttribute('x1', cons.points[a][0])
+          l.setAttribute('y1', cons.points[a][1] + yOffset)
+          l.setAttribute('x2', cons.points[b][0])
+          l.setAttribute('y2', cons.points[b][1] + yOffset)
+          l.setAttribute('stroke', '#4457aa')
+          l.setAttribute('stroke-width', '0.5')
+          l.setAttribute('opacity', '0.7')
+          svg.appendChild(l)
+        })
+        // Draw points (filled if earned, hollow if not)
+        cons.points.forEach(([x,y])=>{
+          const c = document.createElementNS(svgNS,'circle')
+          c.setAttribute('cx', x)
+          c.setAttribute('cy', y + yOffset)
+          c.setAttribute('r', 1.5)
+          const got = filled < fillCount
+          c.setAttribute('fill', got ? '#ffd86b' : 'none')
+          c.setAttribute('stroke', got ? '#ffe28a' : '#6a78c5')
+          c.setAttribute('stroke-width','0.5')
+          svg.appendChild(c)
+          if (got) filled++
+        })
+        yOffset += 24 // stack constellations vertically
+      })
+
+      progress.textContent = `Filling stars: ${Math.min(fillCount, totalPoints)} / ${totalPoints}`
+    }
+
+    function refresh(){
+      try {
+        const s = window.Rewards?.getState() || {stars:0,suns:0,history:[]}
+        renderTotals(s)
+        renderHistory(s)
+        renderSky(s)
+      } catch {}
+    }
+
+    if (document.readyState === 'complete') refresh()
+    else window.addEventListener('DOMContentLoaded', refresh)
+    window.addEventListener('focus', refresh)
+  })()
+</script>
