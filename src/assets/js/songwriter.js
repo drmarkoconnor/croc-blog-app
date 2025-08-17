@@ -854,8 +854,9 @@ function renderPiano() {
 	// If a plugin/web component keyboard is used, wire it and return
 	try {
 		if (el.tagName && el.tagName.toLowerCase() === 'webaudio-keyboard') {
-			const min = 55 // G3
-			const totalSemis = 32
+			// Center around middle C: C3 (48) to C5 (72) => 25 semitones inclusive
+			const min = 48 // C3
+			const totalSemis = 25
 			// webaudio-keyboard attributes
 			el.setAttribute('min', String(min))
 			el.setAttribute('keys', String(totalSemis))
@@ -932,8 +933,9 @@ function renderPiano() {
 		}
 	} catch {}
 	// Build realistic keyboard: stack white keys in a flex row, position black keys on top
-	const start = 55 // G3 (MIDI ~55) as starting white key
-	const totalSemis = 32 // about 2.5 octaves
+	// Fallback keyboard: C3 (48) to C5 (72) => 25 semitones inclusive
+	const start = 48
+	const totalSemis = 25
 	el.innerHTML = ''
 	el.style.position = 'relative'
 	el.style.userSelect = 'none'

@@ -54,6 +54,12 @@
 			"type": "shell",
 			"command": "npm run build",
 			"group": "build"
+		},
+		{
+			"label": "Build Eleventy site",
+			"type": "shell",
+			"command": "npm run build",
+			"group": "build"
 		}
 	]
 }
