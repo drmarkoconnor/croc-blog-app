@@ -856,12 +856,20 @@ function renderPiano() {
 		if (el.tagName && el.tagName.toLowerCase() === 'webaudio-keyboard') {
 			const min = 55 // G3
 			const totalSemis = 32
-			const max = min + totalSemis
+			// webaudio-keyboard attributes
 			el.setAttribute('min', String(min))
-			el.setAttribute('max', String(max))
 			el.setAttribute('keys', String(totalSemis))
+			el.setAttribute('height', '180')
 			el.style.width = '100%'
 			el.style.height = '180px'
+
+			const toneNoteFromMidi = (m) => {
+				try {
+					return Tone?.Frequency?.(m, 'midi')?.toNote?.() || String(m)
+				} catch {
+					return String(m)
+				}
+			}
 			const mapToNote = (payload) => {
 				// Accept midi (0-127), noteNumber, note string (e.g., 'C#4'), or frequency Hz
 				const midi =
@@ -869,10 +877,7 @@ function renderPiano() {
 					(typeof payload === 'number' && payload >= 0 && payload <= 127 ? payload : undefined)
 				const noteStr = payload?.note || (typeof payload === 'string' ? payload : undefined)
 				const freq = payload?.frequency ?? payload?.freq
-				if (midi != null) {
-					try { return Tone?.Frequency?.(midi, 'midi')?.toNote?.() || String(midi) } catch {}
-					return String(midi)
-				}
+				if (midi != null) return toneNoteFromMidi(midi)
 				if (noteStr) return noteStr
 				if (typeof freq === 'number') {
 					try { return Tone?.Frequency?.(freq)?.toNote?.() || String(freq) } catch {}
@@ -893,24 +898,36 @@ function renderPiano() {
 				piano?.triggerRelease(note)
 			}
 			// Ensure audio context resumes on first interaction
-			el.addEventListener('pointerdown', async () => {
-				try { await Tone.start?.() } catch {}
-			}, { passive: true })
-			// Common events exposed by webaudio-keyboard and similar components
+			el.addEventListener(
+				'pointerdown',
+				async () => {
+					try { await Tone.start?.() } catch {}
+				},
+				{ passive: true }
+			)
+			// webaudio-keyboard emits 'change' with e.note = [on(1)/off(0), midi]
+			el.addEventListener('change', async (e) => {
+				const n = e?.note
+				if (Array.isArray(n)) {
+					const isOn = !!n[0]
+					const midi = n[1]
+					const note = toneNoteFromMidi(midi)
+					if (!note) return
+					await ensurePiano()
+					try { await Tone.start?.() } catch {}
+					if (isOn) piano?.triggerAttack(note)
+					else piano?.triggerRelease(note)
+					return
+				}
+				// Fallback for other custom keyboards using CustomEvent/detail
+				const d = e?.detail ?? e
+				const val = d?.value ?? d?.state ?? d?.on ?? d?.pressed
+				if (val) onDown(d)
+				else onUp(d)
+			})
+			// Optional: support explicit noteon/noteoff if present (other implementations)
 			el.addEventListener('noteon', (e) => onDown(e?.detail ?? e))
 			el.addEventListener('noteoff', (e) => onUp(e?.detail ?? e))
-			el.addEventListener('change', (e) => {
-				const d = e?.detail ?? {}
-				const val = d?.value ?? d?.state ?? d?.on
-				if (val) onDown(d)
-				else onUp(d)
-			})
-			el.addEventListener('input', (e) => {
-				const d = e?.detail ?? {}
-				const val = d?.value ?? d?.state ?? d?.on
-				if (val) onDown(d)
-				else onUp(d)
-			})
 			return
 		}
 	} catch {}
