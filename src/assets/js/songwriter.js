@@ -583,6 +583,8 @@ function fmt(t) {
 // Init
 async function init() {
 	// No auth required
+	// Preload audio engine and piano samples (non-blocking)
+	ensurePiano().catch(() => {})
 
 	// Restore draft
 	const d = await loadDraft('current')
@@ -860,31 +862,54 @@ function renderPiano() {
 			el.setAttribute('keys', String(totalSemis))
 			el.style.width = '100%'
 			el.style.height = '180px'
-			const toNote = (midi) =>
-				(typeof Tone?.Frequency === 'function'
-					? Tone.Frequency(midi, 'midi').toNote?.()
-					: null) || String(midi)
-			const onDown = async (midi) => {
+			const mapToNote = (payload) => {
+				// Accept midi (0-127), noteNumber, note string (e.g., 'C#4'), or frequency Hz
+				const midi =
+					payload?.midi ?? payload?.noteNumber ??
+					(typeof payload === 'number' && payload >= 0 && payload <= 127 ? payload : undefined)
+				const noteStr = payload?.note || (typeof payload === 'string' ? payload : undefined)
+				const freq = payload?.frequency ?? payload?.freq
+				if (midi != null) {
+					try { return Tone?.Frequency?.(midi, 'midi')?.toNote?.() || String(midi) } catch {}
+					return String(midi)
+				}
+				if (noteStr) return noteStr
+				if (typeof freq === 'number') {
+					try { return Tone?.Frequency?.(freq)?.toNote?.() || String(freq) } catch {}
+					return String(freq)
+				}
+				return undefined
+			}
+			const onDown = async (payload) => {
+				const note = mapToNote(payload)
+				if (!note) return
 				await ensurePiano()
 				try { await Tone.start?.() } catch {}
-				piano?.triggerAttack(toNote(midi))
+				piano?.triggerAttack(note)
 			}
-			const onUp = (midi) => piano?.triggerRelease(toNote(midi))
-			// Common events exposed by webaudio-keyboard
-			el.addEventListener('noteon', (e) => {
-				const midi = e?.detail?.midi ?? e?.detail?.note ?? e?.detail
-				if (midi != null) onDown(midi)
-			})
-			el.addEventListener('noteoff', (e) => {
-				const midi = e?.detail?.midi ?? e?.detail?.note ?? e?.detail
-				if (midi != null) onUp(midi)
-			})
+			const onUp = (payload) => {
+				const note = mapToNote(payload)
+				if (!note) return
+				piano?.triggerRelease(note)
+			}
+			// Ensure audio context resumes on first interaction
+			el.addEventListener('pointerdown', async () => {
+				try { await Tone.start?.() } catch {}
+			}, { passive: true })
+			// Common events exposed by webaudio-keyboard and similar components
+			el.addEventListener('noteon', (e) => onDown(e?.detail ?? e))
+			el.addEventListener('noteoff', (e) => onUp(e?.detail ?? e))
 			el.addEventListener('change', (e) => {
-				const midi = e?.detail?.midi ?? e?.detail?.note ?? e?.detail?.noteNumber
-				const val = e?.detail?.value
-				if (midi == null) return
-				if (val > 0) onDown(midi)
-				else onUp(midi)
+				const d = e?.detail ?? {}
+				const val = d?.value ?? d?.state ?? d?.on
+				if (val) onDown(d)
+				else onUp(d)
+			})
+			el.addEventListener('input', (e) => {
+				const d = e?.detail ?? {}
+				const val = d?.value ?? d?.state ?? d?.on
+				if (val) onDown(d)
+				else onUp(d)
 			})
 			return
 		}
