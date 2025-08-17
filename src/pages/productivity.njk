@@ -18,9 +18,47 @@ layout: layout.njk
 				<button class="btn" data-min="45" type="button">45</button>
 				<button class="btn" data-min="60" type="button">60</button>
 				<button class="btn" id="btnReset" type="button" style="background:#444;">Reset</button>
+				<button class="btn" id="btnBatSignal" type="button" title="Deploy Bat Signal" style="background:#8a1538;border:1px solid #c44;">🚨 Bat Signal</button>
 			</div>
 		</div>
 		<canvas id="fw" width="800" height="300" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .3s ease"></canvas>
+
+		<!-- Bat Signal Overlay -->
+		<div id="batOverlay" aria-hidden="true" style="display:none;position:absolute;inset:0;z-index:5;background:radial-gradient(120%_80% at 50% 100%, rgba(0,0,0,0.0), rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.8));backdrop-filter:blur(1px)">
+			<!-- Spotlight cone -->
+			<div style="position:absolute;left:50%;bottom:0;transform:translateX(-50%);"><svg width="320" height="320" viewBox="0 0 320 320" style="opacity:.9;filter:drop-shadow(0 6px 18px rgba(255,255,180,.3))">
+				<defs>
+					<radialGradient id="beam" cx="50%" cy="5%" r="80%">
+						<stop offset="0%" stop-color="#fff9b1" stop-opacity="0.95"/>
+						<stop offset="30%" stop-color="#fff4a0" stop-opacity="0.65"/>
+						<stop offset="80%" stop-color="#ffd84d" stop-opacity="0.05"/>
+					</radialGradient>
+				</defs>
+				<g>
+					<ellipse cx="160" cy="60" rx="80" ry="60" fill="url(#beam)"/>
+					<path d="M140,110 L180,110 L300,310 L20,310 Z" fill="url(#beam)"/>
+				</g>
+			</svg></div>
+			<!-- Signal badge (bat-ish) -->
+			<div style="position:absolute;left:50%;top:16px;transform:translateX(-50%);text-shadow:0 4px 10px rgba(255,215,0,.3);font-size:42px">🦇</div>
+			<!-- Modal phone box -->
+			<div id="batModal" role="dialog" aria-modal="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#121225;border:1px solid #ffffff22;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.45);padding:1rem;min-width:min(92vw,420px)">
+				<div style="display:flex;gap:.75rem;align-items:center">
+					<div style="width:60px;height:60px;display:grid;place-items:center;background:#a40021;border-radius:50%;box-shadow:0 0 0 0 rgba(164,0,33,.6);animation:ringPulse 1.2s ease-out infinite">
+						<span style="font-size:32px">☎️</span>
+					</div>
+					<div style="flex:1">
+						<div id="batTitle" style="font-weight:700">Bat signal deployed - Dad on his way</div>
+						<div id="batStatus" style="opacity:.9;font-size:.95rem;margin-top:.15rem">Ringing the red phone…</div>
+					</div>
+				</div>
+				<div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+					<button class="btn btn-small" id="btnBatMute" style="background:#444">Mute</button>
+					<button class="btn btn-small" id="btnBatText" style="background:#2a2a4a">Text Dad</button>
+					<button class="btn btn-small" id="btnBatClose" style="background:#5a2233">Close</button>
+				</div>
+			</div>
+		</div>
 	</section>
 </div>
 
@@ -56,6 +94,64 @@ layout: layout.njk
 			></iframe>
 		</div>
 		</section>
+
+		// Bat Signal overlay + SMS trigger
+		(function(){
+			const btn = document.getElementById('btnBatSignal');
+			if(!btn) return;
+			const overlay = document.getElementById('batOverlay');
+			const modal = document.getElementById('batModal');
+			const btnClose = document.getElementById('btnBatClose');
+			const btnMute = document.getElementById('btnBatMute');
+			const btnText = document.getElementById('btnBatText');
+			const statusEl = document.getElementById('batStatus');
+			const titleEl = document.getElementById('batTitle');
+			let audio, ringing = false, smsSent = false;
+
+			function ensureAudio(){
+				if(audio) return audio;
+				audio = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_f1783f3a94.mp3?filename=old-telephone-ring-105957.mp3');
+				audio.loop = true;
+				audio.volume = 0.6;
+				return audio;
+			}
+			async function startRing(){
+				try{ ensureAudio(); await audio.play(); ringing = true; }catch{}
+			}
+			function stopRing(){ try{ audio?.pause(); ringing = false; }catch{} }
+
+			async function sendSms(){
+				if(smsSent) return;
+				statusEl.textContent = 'Sending text…';
+				try{
+					const res = await fetch('/.netlify/functions/alert', {
+						method: 'POST', headers: { 'content-type':'application/json' },
+						body: JSON.stringify({ message: 'Bat signal deployed ring Charlotte' })
+					});
+					if(res.ok){ smsSent = true; statusEl.textContent = 'Text sent ✅'; }
+					else { statusEl.textContent = 'Failed to send text'; }
+				}catch{ statusEl.textContent = 'Failed to send text'; }
+			}
+
+			function openModal(){
+				overlay.style.display = '';
+				overlay.setAttribute('aria-hidden','false');
+				titleEl.textContent = 'Bat signal deployed - Dad on his way';
+				statusEl.textContent = 'Ringing the red phone…';
+				smsSent = false; startRing();
+			}
+			function closeModal(){ overlay.style.display = 'none'; overlay.setAttribute('aria-hidden','true'); stopRing(); }
+
+			btn.addEventListener('click', ()=>{ openModal(); sendSms(); });
+			btnClose.addEventListener('click', closeModal);
+			btnMute.addEventListener('click', ()=>{ if(ringing) stopRing(); else startRing(); });
+			btnText.addEventListener('click', sendSms);
+		})();
+
+		// ring pulse keyframes
+		const style = document.createElement('style');
+		style.textContent = `@keyframes ringPulse { 0%{box-shadow:0 0 0 0 rgba(164,0,33,.6)} 70%{box-shadow:0 0 0 18px rgba(164,0,33,0)} 100%{box-shadow:0 0 0 0 rgba(164,0,33,0)} }`;
+		document.head.appendChild(style);
 
 		<section class="card">
 			<h3>Outer Space Charlienaut</h3>
