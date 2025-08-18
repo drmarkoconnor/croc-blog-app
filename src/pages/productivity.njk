@@ -13,6 +13,9 @@ layout: layout.njk
 		<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
 			<div id="timeDisplay" style="font-size:clamp(2rem,6vw,3rem);font-weight:800;letter-spacing:0.06em;min-width:9ch;text-align:center">00:00</div>
 			<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+				<button class="btn" data-min="1" type="button">1</button>
+				<button class="btn" data-min="5" type="button">5</button>
+				<button class="btn" data-min="10" type="button">10</button>
 				<button class="btn" data-min="15" type="button">15</button>
 				<button class="btn" data-min="30" type="button">30</button>
 				<button class="btn" data-min="45" type="button">45</button>
@@ -222,7 +225,7 @@ layout: layout.njk
 		clearInterval(tickTimer); endAt = 0; display.textContent = '00:00';
 		cvs.style.opacity = 0; cancelAnimationFrame(raf); particles=[];
 	}
-	function done(){
+	async function done(){
 		clearInterval(tickTimer); display.textContent = '00:00';
 		celebrate(); speak();
 		try{ await window.Rewards?.award('pomodoro', 3, 'Pomodoro completed') }catch{}

@@ -141,10 +141,16 @@ async function autosave() {
 			})
 			if (res.ok) {
 				const j = await res.json()
-					if (!songId && j?.id) {
+				if (!songId && j?.id) {
 					songId = j.id
 					ensureDeleteButton()
-						try{ await window.Rewards?.award('song_created', 10, 'Lyric Builder: new song') }catch{}
+					try {
+						await window.Rewards?.award(
+							'song_created',
+							10,
+							'Lyric Builder: new song'
+						)
+					} catch {}
 				}
 			}
 		} catch (e) {

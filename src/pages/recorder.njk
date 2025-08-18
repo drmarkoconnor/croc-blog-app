@@ -191,7 +191,9 @@ layout: layout.njk
 			statusEl.textContent = 'Saving…'
 			await postIdea(lastSnippetId, 'save')
 			statusEl.textContent = 'Saved.'
-			try{ await window.Rewards?.award('snippet_saved', 5, 'Song snippet saved') }catch{}
+			try {
+				await window.Rewards?.award('snippet_saved', 5, 'Song snippet saved')
+			} catch {}
 		} catch (e) {
 			statusEl.textContent = 'Save failed'
 			console.error(e)
